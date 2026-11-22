@@ -1,0 +1,7 @@
+{
+  "name": "mr-marketplace",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "python3 build.py" },
+  "dependencies": { "@netlify/blobs": "^8.1.0" }
+}
