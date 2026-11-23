@@ -61,7 +61,7 @@ export function settings() {
     priorityWebhook: env("PRIORITY_WEBHOOK_URL"),
     resendKey: env("RESEND_API_KEY"),
     alertEmail: env("ALERT_EMAIL"),
-    alertFrom: env("ALERT_FROM", "Mr. Marketplace <leads@mrmarketplace.com>"),
+    alertFrom: env("ALERT_FROM", "Mr. Marketplace <onboarding@resend.dev>"),   // resend.dev works with no domain setup (alerts to your own Resend email only)
     adminPassword: env("AGENT_PASSWORD"),
     delivery: env("LEAD_DELIVERY", "immediate"),          // "immediate" = after contact info, "qualified" = after full qualification
     confirmEmail: env("SEND_CONFIRMATION_EMAIL", "true") === "true",
@@ -142,6 +142,45 @@ export function flatten(L, event) {
     agent: L.agent?.name || "", agent_phone: L.agent?.phone || "", created: L.created, dashboard: `${process.env.URL || ""}/crm/#leads/${L.id}`
   };
 }
+
+/* ---------- the lead alert email ---------- */
+const money = (v) => (v == null || v === "" || isNaN(Number(v))) ? v : "$" + Math.round(Number(v)).toLocaleString("en-US");
+const nice = (v) => v === true ? "Yes" : v === false ? "No" : v;
+const LABELS = {
+  preferred_contact: { call: "Phone call", text: "Text message", email: "Email" },
+  start: { asap: "As soon as possible", next: "Next month", later: "In 2 to 3 months", research: "Just researching" },
+  work: { self: "Self-employed", owner: "Business owner", w2: "Employed (W-2)", between: "Between jobs", other: "Other" },
+  budget: { "500": "Under $500/mo", "1000": "$500 to $1,000/mo", "2000": "$1,000 to $2,000/mo", "9999": "$2,000+/mo", unsure: "Not sure" },
+  tobacco: { no: "No", yes: "Yes" } };
+const lab = (k, v) => (LABELS[k] && LABELS[k][String(v)]) || v;
+function leadEmailText(b, label) {
+  return [`${label}: ${b.name}`, `Phone: ${b.phone}`, `Email: ${b.email}`, `Prefers: ${lab("preferred_contact", b.preferred_contact)}`, `Location: ${[b.zip, b.county, b.state].filter(Boolean).join(", ")}`, `Priority: ${b.priority}`, b.language === "SPANISH" ? "Speaks: Spanish" : "", `Open in CRM: ${b.dashboard}`].filter(Boolean).join("\n");
+}
+function leadEmailHtml(b, label, hot) {
+  const tel = String(b.phone || "").replace(/\D/g, "");
+  const btn = (href, text, primary) => `<a href="${htmlEsc(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:12px 20px;border-radius:10px;font:600 15px Arial,sans-serif;text-decoration:none;${primary ? "background:#0b1f3a;color:#ffffff" : "background:#ffffff;color:#0b1f3a;border:1px solid #c9d3e0"}">${text}</a>`;
+  const can = (k) => b["consent_" + k];
+  const buttons = [tel && can("call") ? btn("tel:+1" + tel, "📞 Call " + htmlEsc(b.phone), true) : "", tel && can("text") ? btn("sms:+1" + tel, "💬 Text", false) : "", b.email && can("email") ? btn("mailto:" + b.email, "✉️ Email", false) : "", b.dashboard && /^https:/.test(b.dashboard) ? btn(b.dashboard, "Open in CRM →", !(tel && can("call"))) : ""].join("");
+  const facts = [
+    ["Prefers", lab("preferred_contact", b.preferred_contact)], ["Location", [b.zip, b.county, b.state].filter(Boolean).join(", ")], ["Household", b.household_size ? `${b.household_size}${b.ages ? " (ages " + b.ages + ")" : ""}` : ""],
+    ["Wants coverage", lab("start", b.start)], ["Covered today", b.current_coverage], ["Current carrier", b.current_carrier], ["Current premium", b.current_premium],
+    ["Work", lab("work", b.work)], ["Household income", money(b.income)], ["Budget", lab("budget", b.budget)], ["Tobacco", lab("tobacco", b.tobacco)], ["Business", b.business], ["Employees", b.employees],
+    ["Plans they saw", b.rates_shown], ["Lowest premium shown", money(b.lowest_premium)], ["Score", b.score != null ? `${b.score}/100 (category ${b.category || "-"})` : ""], ["Notes", b.flags], ["Assigned to", b.agent]
+  ].filter(([, v]) => v !== "" && v != null).map(([k, v]) => `<tr><td style="padding:7px 0;color:#5b6b80;font:14px Arial,sans-serif;width:42%;vertical-align:top">${k}</td><td style="padding:7px 0;color:#0b1f3a;font:600 14px Arial,sans-serif">${htmlEsc(nice(v))}</td></tr>`).join("");
+  const badge = hot ? '<span style="display:inline-block;background:#d93a2b;color:#fff;border-radius:999px;padding:4px 12px;font:700 12px Arial,sans-serif;letter-spacing:.04em">CALL NOW</span>' : `<span style="display:inline-block;background:#e8eef7;color:#1d5fa8;border-radius:999px;padding:4px 12px;font:700 12px Arial,sans-serif;letter-spacing:.04em">${htmlEsc(String(b.priority || "").toUpperCase())}</span>`;
+  const es = b.language === "SPANISH" ? '<span style="display:inline-block;margin-left:6px;background:#fff4d6;color:#8a5a00;border-radius:999px;padding:4px 12px;font:700 12px Arial,sans-serif">SPEAKS SPANISH</span>' : "";
+  return `<!doctype html><html><body style="margin:0;background:#f2f5f9;padding:24px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e1e7ef">
+<tr><td style="background:#0b1f3a;padding:18px 24px;color:#ffffff;font:700 16px Arial,sans-serif;letter-spacing:.02em">MR.MARKETPLACE <span style="font-weight:400;color:#9fb1c8">· ${htmlEsc(label)}</span></td></tr>
+<tr><td style="padding:24px 24px 8px">${badge}${es}
+<div style="margin:14px 0 4px;color:#0b1f3a;font:700 26px Arial,sans-serif">${htmlEsc(b.name)}</div>
+<div style="color:#5b6b80;font:15px Arial,sans-serif">${htmlEsc(b.phone || "")}${b.email ? " · " + htmlEsc(b.email) : ""}</div></td></tr>
+<tr><td style="padding:16px 24px 8px">${buttons}</td></tr>
+<tr><td style="padding:4px 24px 20px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e9eef4">${facts}</table></td></tr>
+<tr><td style="padding:14px 24px;background:#f7f9fc;color:#8392a5;font:12px Arial,sans-serif">Lead ${htmlEsc(b.lead_id || "")} · ${htmlEsc(String(b.created || "").replace("T", " ").slice(0, 16))} UTC. Only contact this person the ways they agreed to.</td></tr>
+</table></td></tr></table></body></html>`;
+}
 export async function alert(L, cfg, event = "new_lead", extra = {}) {
   const body = { ...flatten(L, event), ...extra };
   const urls = new Set([cfg.webhook, L.agent?.webhook].filter(Boolean));
@@ -149,9 +188,11 @@ export async function alert(L, cfg, event = "new_lead", extra = {}) {
   const jobs = [...urls].map((u) => fetch(u, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).catch(() => {}));
   const to = [cfg.alertEmail, L.agent?.email].filter(Boolean);
   if (cfg.resendKey && to.length) {
-    const rows = Object.entries(body).filter(([, v]) => v !== "" && v != null).map(([k, v]) => `<tr><td style="padding:4px 10px;color:#6b7a8f">${htmlEsc(k)}</td><td style="padding:4px 10px"><b>${htmlEsc(v)}</b></td></tr>`).join("");
+    const hot = body.priority === "A - CALL NOW";
+    const label = { new_lead: "New lead", qualified: "Lead finished qualifying", repeat_request: "Returning lead" }[event] || event.replace(/_/g, " ");
+    const subject = oneLine(`${hot ? "🔥 CALL NOW: " : ""}${label}: ${body.name}, ${body.state}${body.language === "SPANISH" ? " (Spanish)" : ""}`);
     jobs.push(fetch("https://api.resend.com/emails", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${cfg.resendKey}` },
-      body: JSON.stringify({ from: cfg.alertFrom, to, subject: oneLine(`[${body.priority}] ${event.replace("_", " ")}: ${body.name} (${body.state})`), html: `<table style="font-family:sans-serif;font-size:14px">${rows}</table>` }) }).catch(() => {}));
+      body: JSON.stringify({ from: cfg.alertFrom, to, subject, html: leadEmailHtml(body, label, hot), text: leadEmailText(body, label) }) }).catch(() => {}));
   }
   await Promise.all(jobs);
 }
