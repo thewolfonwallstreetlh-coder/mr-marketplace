@@ -27,3 +27,15 @@
   // cursor glow on calculator cards
   document.querySelectorAll(".tools-dark .tcard").forEach(c=>c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();c.style.setProperty("--mx",(e.clientX-r.left)+"px");c.style.setProperty("--my",(e.clientY-r.top)+"px")}));
 })();
+
+/* header dropdowns: keyboard, touch and a short close delay */
+(()=>{const dds=document.querySelectorAll(".hd .dd");if(!dds.length)return;
+const wide=()=>matchMedia("(min-width:1321px)").matches;
+const close=x=>{x.classList.remove("on");const t=x.querySelector(".dd-t");t&&t.setAttribute("aria-expanded","false")};
+dds.forEach(d=>{const t=d.querySelector(".dd-t");let tm;
+ d.addEventListener("mouseenter",()=>{clearTimeout(tm);if(!wide())return;dds.forEach(o=>o!==d&&close(o));d.classList.add("on");t.setAttribute("aria-expanded","true")});
+ d.addEventListener("mouseleave",()=>{tm=setTimeout(()=>close(d),140)});
+ t.addEventListener("click",e=>{if(!wide())return;if(matchMedia("(hover:none)").matches&&!d.classList.contains("on")){e.preventDefault();dds.forEach(o=>o!==d&&close(o));d.classList.add("on");t.setAttribute("aria-expanded","true")}});
+ d.addEventListener("keydown",e=>{if(e.key==="Escape"){close(d);t.focus()}});
+ d.addEventListener("focusout",e=>{if(!d.contains(e.relatedTarget))close(d)});});
+document.addEventListener("click",e=>{if(!e.target.closest(".hd .dd"))dds.forEach(close)});})();

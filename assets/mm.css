@@ -733,3 +733,48 @@ p{margin:0}
 .hd.solid .menu{background:rgba(255,255,255,.5)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hd.solid{background:rgba(255,255,255,.96)}}
 .hd.solid nav a{color:#14243a}
+/* ===== glass dropdown menus ===== */
+/* header glass lives on a pseudo-layer so the dropdowns can blur the page beneath them */
+.hd.solid{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+.hd::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);transition:background-color .35s;pointer-events:none}
+.hd.solid::before{background:rgba(255,255,255,.58);backdrop-filter:blur(22px) saturate(1.9);-webkit-backdrop-filter:blur(22px) saturate(1.9)}
+.hd{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+.dd{position:relative;display:flex;align-items:center}
+.dd-t{display:inline-flex;align-items:center;gap:5px}
+.dd-c{width:12px;height:12px;opacity:.55;transition:transform .25s ease,opacity .2s}
+.dd:hover .dd-c,.dd.on .dd-c{transform:rotate(180deg);opacity:.9}
+.dd-m{position:absolute;top:100%;left:50%;padding-top:14px;transform:translate(-50%,6px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,transform .25s cubic-bezier(.2,.8,.2,1),visibility 0s .25s;z-index:70}
+.dd-in{min-width:300px;padding:8px;border-radius:16px;background:rgba(255,255,255,.7);backdrop-filter:blur(26px) saturate(1.9);-webkit-backdrop-filter:blur(26px) saturate(1.9);border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(11,31,58,.06),0 24px 48px -16px rgba(11,31,58,.32);position:relative;overflow:hidden}
+.dd-in::before{content:"";position:absolute;inset:0 0 auto 0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0));pointer-events:none}
+@media (hover:hover) and (min-width:1321px){
+  .dd:hover .dd-m,.dd.on .dd-m{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition:opacity .2s ease,transform .25s cubic-bezier(.2,.8,.2,1),visibility 0s}
+}
+@media (min-width:1321px){.dd:focus-within .dd-m{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition:opacity .2s,transform .25s,visibility 0s}}
+.hd nav .dd-m a{display:block;position:relative;padding:10px 12px;border-radius:10px;white-space:normal;color:var(--ink);font-size:14.5px;line-height:1.3}
+.hd nav .dd-m a b{font-weight:600;display:block}
+.hd nav .dd-m a small{display:block;color:#56657a;font-size:12.5px;font-weight:400;margin-top:2px}
+.hd nav .dd-m a:hover,.hd nav .dd-m a:focus-visible{background:rgba(255,255,255,.75);box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 4px 12px -6px rgba(11,31,58,.25);text-decoration:none}
+.hd nav .dd-m a.dd-all{margin-top:4px;border-top:1px solid rgba(11,31,58,.08);border-radius:0 0 10px 10px;color:#1d5fa8}
+.hd nav .dd-m a.dd-all b{font-weight:600}
+/* small screens: the menu panel is glass too, and sub-links show indented */
+@media (max-width:1320px){
+  .hd nav.open{background:rgba(255,255,255,.72);backdrop-filter:blur(26px) saturate(1.9);-webkit-backdrop-filter:blur(26px) saturate(1.9);border-bottom:1px solid rgba(255,255,255,.6);max-height:calc(100vh - 78px);overflow:auto}
+  .hd nav.open .dd{display:block}
+  .hd nav.open .dd-t{display:flex;justify-content:space-between;width:100%}
+  .hd nav.open .dd-c{display:none}
+  .hd nav.open .dd-m{position:static;transform:none;opacity:1;visibility:visible;pointer-events:auto;padding:0 0 6px 14px}
+  .hd nav.open .dd-in{min-width:0;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  .hd nav.open .dd-in::before{display:none}
+  .hd nav.open .dd-m a{padding:9px 4px;border-bottom:0;font-size:15px}
+  .hd nav.open .dd-m a small{display:none}
+  .hd nav.open .dd-m a.dd-all{display:none}
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.dd-in{background:rgba(255,255,255,.97)}.hd.solid::before{background:rgba(255,255,255,.96)}}
+@media (prefers-reduced-motion:reduce){.dd-m,.dd-c{transition:none}}
+@media (max-width:1320px){
+  .hd nav.open .dd-t{font-size:12px;text-transform:uppercase;letter-spacing:.09em;font-weight:600;color:#1d5fa8;border-bottom:0;padding:18px 4px 4px}
+  .hd nav.open .dd-m{padding:0 0 8px;border-bottom:1px solid rgba(11,31,58,.08)}
+  .hd nav.open .dd-m a{padding:10px 4px;font-size:16px}
+  .hd nav.open .dd-m a b{font-weight:500}
+  .hd nav.open .dd-t:hover{background:none}
+}
