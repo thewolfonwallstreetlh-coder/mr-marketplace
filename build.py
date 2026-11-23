@@ -19,10 +19,10 @@ I.update({
  "calendar":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
  "chev":'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 4l4 4-4 4"/></svg>',
 })
-LOGO_DARK = '<img src="/assets/brand/logo-compact-dark.png" alt="{b}" width="1000" height="254">'
-NAV = [("How it works","/#how"),("Self-employed","/health-insurance-for-self-employed/"),("Business owners","/small-business-health-insurance/"),
+LOGO_DARK = '<img src="/assets/brand/logo-horizontal-dark.png" alt="{b}" width="1319" height="155">'
+NAV = [("Self-employed","/health-insurance-for-self-employed/"),("Business owners","/small-business-health-insurance/"),
        ("Free tools","/tools/"),("Help center","/help/")]
-NAV_ES = [("Cómo funciona","/es/#how"),("Herramientas gratuitas","/es/herramientas/"),("Glosario","/es/glosario/"),("Ayuda","/es/ayuda/")]
+NAV_ES = [("Cómo funciona","/es/#how"),("Herramientas","/es/herramientas/"),("Glosario","/es/glosario/"),("Ayuda","/es/ayuda/")]
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
 def org_schema():
