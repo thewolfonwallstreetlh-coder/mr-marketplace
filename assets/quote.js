@@ -309,7 +309,7 @@ function results(R,L){
   } else if(S.product==="business"){
     list=`<div class="panel"><h3>What happens next</h3><p>${esc(ag.name)} will review coverage options for ${esc(S.biz)} and walk you through costs and next steps${S.renewal&&S.renewal!=="Not sure"?` ahead of your ${esc(S.renewal)} date`:""}.</p></div>`;
   }
-  v.innerHTML=`<div class="qr-top"><a href="/"><img src="/assets/brand/logo-compact-dark.png" alt="${esc(D.brand)}"></a><button class="qr-x" type="button">Edit details</button></div>
+  v.innerHTML=`<div class="qr-top"><a href="/"><img src="/assets/brand/logo-horizontal-dark.png" alt="${esc(D.brand)}"></a><button class="qr-x" type="button">Edit details</button></div>
    <div class="qr-main"><div class="qr-hd"><div><div class="meta">${esc(S.product==="business"?S.biz:`${S.ages.length} ${S.ages.length>1?"people":"person"} · ZIP ${S.zip}`)}${R.county?" · "+esc(R.county):""}</div>${head}</div>${agentCard}</div>${track}${list}</div>`;
   document.body.appendChild(v);document.documentElement.classList.add("qr-open");
   v.querySelector(".qr-x").onclick=()=>{v.remove();document.documentElement.classList.remove("qr-open")};
