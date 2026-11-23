@@ -144,6 +144,12 @@ HOME_EN = {
              ("people","\u201cI want someone to explain it.\u201d","A licensed professional","One licensed specialist reviews your options with you, verifies networks and prescriptions, and helps you enroll."),
              ("track","\u201cWhat happens next?\u201d","Track your request","Follow every step online, message your specialist and control how you're contacted.")],
  "free_kick":"Free calculators","free_h":"Answers in seconds, no sign-up required.",
+ "fc":[("Your doctor","In network","ok"),("Tax credit applied","\u2212$412/mo","credit"),("Compared side by side","3 Gold plans","cmp")],"example":"Example",
+ "stats":[("14","+","insurance companies"),("5","","free calculators"),("2"," min","to see your rates"),("0","$","cost to you")],
+ "demo_kick":"See it in action","demo_h":"Your whole search, in one place.","demo_p":"No call center, no guesswork. Watch how it works.",
+ "demo_steps":[("Real plans, real prices","Every Marketplace plan in your ZIP code, with your tax credit already applied."),("Your doctors, checked","See which plans include your doctors and prescriptions before you choose."),("The best value, first","Sort by what you'd actually pay in a year, not just the monthly premium.")],
+ "demo_rows":[("Florida Blue","Gold PPO","$612","$7,344"),("Ambetter","Silver HMO","$488","$9,120"),("Oscar","Gold EPO","$574","$6,890"),("Aetna CVS Health","Bronze HMO","$341","$11,250")],
+ "demo_lbl":["Monthly","Est. yearly","In network","Best value","Sorted by yearly cost"],
  "why_kick":"Why Mr. Marketplace","why_h":"Built like a financial platform. Run by people.",
  "feats":[("compass","Explore options","A guided shopping experience with real plans and prices where available."),("people","Personal assistance","One licensed professional handles everything, from your first question to enrollment."),("shield","Secure experience","Encrypted, never sold, and contact only in the ways you choose."),("health","Every carrier, side by side","Every Marketplace plan in your area, from every carrier, with real monthly prices.")],
  "shop_kick":"Shop coverage","shop_h":"What are you looking for?","shop_go":"Explore options",
@@ -172,8 +178,13 @@ def home(path="/", noindex=False):
  <div class="sec-head up"><span class="kick">Who we serve</span><h2 class="h2">For people who buy their own coverage.</h2></div>
  <div class="segs">{''.join(f'<a class="up" href="{h}"><b>{t}</b><span>{d}</span></a>' for t,d,h in SEGS_EN)}</div>
 </div></section>"""
+    fc_html = "".join('<div class="fc fc%d"><span class="fi %s">%s</span><div><small>%s</small><b>%s</b></div><em>%s</em></div>' % (i+1, k, I["check"] if k == "ok" else ("$" if k == "credit" else I["cols"]), a, b, C["example"]) for i, (a, b, k) in enumerate(C["fc"]))
+    stats_html = "".join('<div class="up"><b><span class="pre">%s</span><span class="count" data-to="%s">%s</span><span class="suf">%s</span></b><span>%s</span></div>' % ("$" if p == "$" else "", n, n, "" if p == "$" else p, t) for n, p, t in C["stats"])
+    steps_html = "".join('<li data-s="%d"><b>%s</b><span>%s</span><i></i></li>' % (i, t, d) for i, (t, d) in enumerate(C["demo_steps"]))
+    lb = C["demo_lbl"]
+    rows_html = "".join('<div class="drow" style="--i:%d;--o:%d" data-o="%d"><div><small>%s</small><b>%s</b><span class="dnet">%s %s</span></div><div class="dnum"><small>%s</small><b>%s</b></div><div class="dnum yr"><small>%s</small><b>%s</b></div>%s</div>' % (i, o, o, a, p, I["check"], lb[2], lb[0], m, lb[1], y, ('<span class="dbest">%s</span>' % lb[3]) if o == 0 else "") for i, ((a, p, m, y), o) in enumerate(zip(C["demo_rows"], [1, 2, 0, 3])))
     body = f"""
-<section class="hero"><div class="container">
+<section class="hero dark"><div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div><div class="container">
  <div>
   <div class="eyebrow">{C['eyebrow']}</div>
   <h1>{C['h1']}</h1>
@@ -181,13 +192,17 @@ def home(path="/", noindex=False):
   <div class="hero-acts"><a class="btn btn-navy" href="#quote" data-quote>{C['cta']} {I['arrow']}</a><a class="btn btn-line" href="#how">{C['how']}</a></div>
   <ul class="ticks">{''.join(f'<li>{I["check"]}{t}</li>' for t in C['ticks'])}</ul>
  </div>
- <div class="qc" id="quote"><div class="qc-body"><h2>{L("Let's get started.","Comencemos.")}</h2><p class="sub">{C['loading']} <a href="tel:{s['phone_href']}">{CALL()}</a>.</p></div></div>
+ <div class="qwrap">
+  <div class="fcards" aria-hidden="true">{fc_html}</div>
+  <div class="qc" id="quote"><div class="qc-body"><h2>{L("Let's get started.","Comencemos.")}</h2><p class="sub">{C['loading']} <a href="tel:{s['phone_href']}">{CALL()}</a>.</p></div></div>
+ </div>
 </div></section>
 <script type="application/json" id="mm-data">{json.dumps(data)}</script>
 
 <div class="carriers"><div class="container">
  <div class="lbl">{C['carriers']}</div>
- <div class="cars">{''.join(f'<span>{E(n)}</span>' for n in s['compare_carriers'])}<span class="more">{C['more']}</span></div>
+ <div class="marquee" aria-label="{E(', '.join(s['compare_carriers']))}"><div class="track">{''.join(f'<span>{E(n)}</span>' for n in s['compare_carriers']*2)}</div></div>
+ <div class="more">{C['more']}</div>
 </div></div>
 
 <section class="sec" id="how"><div class="container">
@@ -195,7 +210,19 @@ def home(path="/", noindex=False):
  <div class="steps3">{''.join(f'<div class="step up"><div class="n">{i+1}</div><h3>{t}</h3><p>{d}</p></div>' for i,(t,d) in enumerate(C['steps']))}</div>
 </div></section>
 
-<section class="sec gray"><div class="container">
+<section class="stats"><div class="container">{stats_html}</div></section>
+
+<section class="sec demo-sec"><div class="container demo-grid">
+ <div class="up"><span class="kick">{C['demo_kick']}</span><h2 class="h2">{C['demo_h']}</h2><p class="demo-p">{C['demo_p']}</p>
+  <ol class="demo-steps">{steps_html}</ol>
+  <a class="btn btn-navy" href="#quote" data-quote>{C['cta']} {I['arrow']}</a></div>
+ <div class="demo up" aria-hidden="true"><div class="dbar"><i></i><i></i><i></i><span>mrmarketplace.com</span></div>
+  <div class="dbody"><div class="dhead"><b>52 {L("plans","planes")}</b><span class="dsort">{C["demo_lbl"][4]}</span></div>
+   {rows_html}
+  </div></div>
+</div></section>
+
+<section class="sec dark tools-dark"><div class="glow" aria-hidden="true"></div><div class="container">
  <div class="sec-head up"><span class="kick">{C['free_kick']}</span><h2 class="h2">{C['free_h']}</h2></div>
  <div class="tcards">{tools}</div>
 </div></section>
