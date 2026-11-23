@@ -295,6 +295,7 @@ function results(R,L){
      </div>
      <div class="qr-bar"><div class="chips"><button class="on" data-m="all">All plans <span>${R.plans.length}</span></button>${["Bronze","Expanded Bronze","Silver","Gold","Platinum","Catastrophic"].filter(m=>metals.includes(m)).map(m=>`<button data-m="${m}">${m}</button>`).join("")}<button data-h="1">HSA eligible</button><button data-cv="1" hidden>Covers my doctors &amp; drugs</button></div>
      <div style="display:flex;gap:10px;flex-wrap:wrap"><label class="sort">Carrier <select class="car"><option value="">All carriers (${carriers.length})</option>${carriers.map(c=>`<option>${esc(c)}</option>`).join("")}</select></label><label class="sort">Sort <select class="srt"><option value="year">Lowest yearly estimate</option><option value="premium" selected>Lowest premium</option><option value="deductible">Lowest deductible</option><option value="moop">Lowest out-of-pocket max</option><option value="rating">Highest rated</option></select></label></div></div>
+     ${netRow(R)}
      <div class="legend"><b>New to insurance terms?</b> <span>Premium ${tip("premium")}</span><span>Deductible ${tip("deductible")}</span><span>Out-of-pocket max ${tip("moop")}</span><span>Metal levels ${tip("metal")}</span><span>HMO / PPO / EPO ${tip("network")}</span><span>HSA ${tip("hsa")}</span> <a href="/glossary/" target="_blank">Full glossary ↗</a></div>
      <div class="plans"></div>
      <div class="cmp-tray" hidden><span></span><button type="button" class="cmp-clear">Clear</button><button type="button" class="cmp-go">Compare side by side</button></div>
@@ -341,12 +342,27 @@ const QI={doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
  cost:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 3v3M16 3v3M9 14h6"/></svg>'};
 
 /* ---------------- shopping tools ---------------- */
-let filt="all",sort="premium",hsa=false,car="",onlyCv=false,USE="med";
+let filt="all",sort="premium",hsa=false,car="",onlyCv=false,USE="med",ntype="";
+const NET_INFO={
+  HMO:["Lower cost. Pick a primary doctor and get referrals for specialists. In-network care only, except emergencies.","Menor costo. Eliges un médico principal y necesitas referidos para especialistas. Solo dentro de la red, salvo emergencias."],
+  PPO:["Most flexible. See specialists without referrals, and out-of-network care is partly covered.","Más flexible. Ves especialistas sin referido y la atención fuera de la red se cubre en parte."],
+  EPO:["No referrals needed, but you must stay in network except for emergencies.","No necesitas referidos, pero debes quedarte dentro de la red salvo emergencias."],
+  POS:["A mix: a primary doctor and referrals, with some out-of-network coverage.","Una mezcla: médico principal y referidos, con algo de cobertura fuera de la red."]};
+function netRow(R){
+  const order=["HMO","PPO","EPO","POS"],cnt={};R.plans.forEach(p=>{if(p.type)cnt[p.type]=(cnt[p.type]||0)+1});
+  const types=order.filter(t=>cnt[t]).concat(Object.keys(cnt).filter(t=>!order.includes(t)).sort());
+  if(types.length<2){ntype="";return""}
+  if(ntype&&!cnt[ntype])ntype="";
+  return `<div class="qr-net"><span class="qr-net-l">${ES?"Tipo de red":"Network type"} ${tip("network")}</span><div class="chips">`+
+    `<button class="${ntype?"":"on"}" data-nt="">${ES?"Todos":"Any"}</button>`+
+    types.map(t=>`<button class="${ntype===t?"on":""}" data-nt="${esc(t)}" title="${esc((NET_INFO[t]||["",""])[ES?1:0])}">${esc(t)} <span>${cnt[t]}</span></button>`).join("")+
+    `</div><p class="qr-net-h" aria-live="polite">${ntype&&NET_INFO[ntype]?esc(NET_INFO[ntype][ES?1:0]):""}</p></div>`}
 const MY={doc:[],rx:[]},CV={},CMP=[];let cvBusy=false,careT=null;
 const yearCost=p=>{const prem=(p.premium_w_credit??p.premium)*12,d=p.deductible??0,m=p.moop??d;
   const care=USE==="low"?500:USE==="med"?5000:1e9;const oop=USE==="high"?m:Math.min(m,Math.min(care,d)+0.2*Math.max(0,care-d));return prem+oop};
 function bindPlans(v,R){
-  v.querySelectorAll(".chips button").forEach(b=>b.onclick=()=>{if(b.dataset.h){hsa=!hsa;b.classList.toggle("on",hsa)}else if(b.dataset.cv){onlyCv=!onlyCv;b.classList.toggle("on",onlyCv)}else{v.querySelectorAll(".chips [data-m]").forEach(x=>x.classList.remove("on"));b.classList.add("on");filt=b.dataset.m}list(v,R)});
+  v.querySelectorAll("[data-nt]").forEach(b=>b.onclick=()=>{ntype=b.dataset.nt;v.querySelectorAll("[data-nt]").forEach(x=>x.classList.toggle("on",x===b));const h=v.querySelector(".qr-net-h");if(h)h.textContent=ntype&&NET_INFO[ntype]?NET_INFO[ntype][ES?1:0]:"";list(v,R)});
+  v.querySelectorAll(".qr-bar .chips button").forEach(b=>b.onclick=()=>{if(b.dataset.h){hsa=!hsa;b.classList.toggle("on",hsa)}else if(b.dataset.cv){onlyCv=!onlyCv;b.classList.toggle("on",onlyCv)}else{v.querySelectorAll(".chips [data-m]").forEach(x=>x.classList.remove("on"));b.classList.add("on");filt=b.dataset.m}list(v,R)});
   v.querySelector("select.srt").onchange=e=>{sort=e.target.value;list(v,R)};v.querySelector("select.car").onchange=e=>{car=e.target.value;list(v,R)};
   v.querySelectorAll("[data-use]").forEach(b=>b.onclick=()=>{USE=b.dataset.use;v.querySelectorAll("[data-use]").forEach(x=>x.classList.toggle("on",x===b));list(v,R)});
   let ptype="Individual";v.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{ptype=b.dataset.pt;v.querySelectorAll("[data-pt]").forEach(x=>x.classList.toggle("on",x===b));const i=v.querySelector('[data-q="doc"]');i.placeholder=ptype==="Facility"?"Hospital or facility name":"Search by name, e.g. Smith";i.dispatchEvent(new Event("input"))});
@@ -377,7 +393,7 @@ const cvOf=(p)=>{const c=CV[p.id]||{p:{},d:{}};const st=x=>x==="Covered"||x==="G
 const allCv=p=>cvOf(p).every(i=>i.s==="y");
 function list(v,R){
   const pr=p=>p.premium_w_credit??p.premium,has=MY.doc.length||MY.rx.length;
-  let ps=R.plans.filter(p=>(filt==="all"||p.metal===filt)&&(!hsa||p.hsa)&&(!car||p.issuer===car)&&(!onlyCv||allCv(p)));
+  let ps=R.plans.filter(p=>(filt==="all"||p.metal===filt)&&(!ntype||p.type===ntype)&&(!hsa||p.hsa)&&(!car||p.issuer===car)&&(!onlyCv||allCv(p)));
   const k={year:yearCost,premium:pr,deductible:p=>p.deductible??1e9,moop:p=>p.moop??1e9,rating:p=>-(p.rating||0)}[sort];ps=ps.slice().sort((a,b)=>k(a)-k(b));
   const el=v.querySelector(".plans"),cp=p=>p.copays||{};
   el.innerHTML=ps.length?ps.map((p,i)=>{const cv=has?cvOf(p):[];return `<article class="pc" style="animation-delay:${Math.min(i,10)*35}ms"><div><div class="iss">${esc(p.issuer)}</div><h3>${esc(p.name)}</h3>
