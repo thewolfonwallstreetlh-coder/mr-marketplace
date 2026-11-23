@@ -97,7 +97,16 @@ function open(){panel.hidden=false;root.classList.add("open");launch.setAttribut
   if(!hist.length&&!log.querySelector(".mm-row")){add("bot",actions("Good to meet you. I'm here to make sure you get the insurance you're looking for. Ask me anything, or see your rates in about two minutes. [[RATES]]"));chips(START);requestAnimationFrame(()=>{log.style.scrollBehavior="auto";log.scrollTop=0;log.style.scrollBehavior=""})}
   if(matchMedia("(pointer:fine)").matches)setTimeout(()=>input.focus({preventScroll:true}),250)}
 function close(){panel.hidden=true;root.classList.remove("open");launch.setAttribute("aria-expanded","false");launch.focus({preventScroll:true})}
-launch.onclick=()=>panel.hidden?open():close();
+launch.onclick=()=>{hideHi();panel.hidden?open():close()};
+// A friendly hello after a few seconds, once per visit (not on the CRM or private pages)
+let hi=null;function hideHi(){if(hi){hi.classList.remove("show");setTimeout(()=>hi&&hi.remove(),300);hi=null}}
+try{if(!sessionStorage.getItem("mm_hi")&&!/^\/(crm|status|es\/estado)/.test(location.pathname)){setTimeout(()=>{if(!panel.hidden||document.documentElement.classList.contains("qr-open"))return;
+  sessionStorage.setItem("mm_hi","1");hi=document.createElement("div");hi.className="mm-hi";hi.setAttribute("role","status");
+  hi.innerHTML=`<button type="button" class="x" aria-label="Close">×</button><b>Hi, I'm Mr. Marketplace.</b><span>Want to see real plans and prices for your ZIP code? It takes about two minutes.</span><div><button type="button" class="go">Show me my plans</button><button type="button" class="ask">I have a question</button></div>`;
+  root.appendChild(hi);requestAnimationFrame(()=>hi&&hi.classList.add("show"));
+  hi.querySelector(".x").onclick=hideHi;hi.querySelector(".ask").onclick=()=>{hideHi();open()};
+  hi.querySelector(".go").onclick=()=>{hideHi();const q=document.getElementById("quote");if(q){q.scrollIntoView({behavior:"smooth",block:"center"});const f=q.querySelector("select,input");f&&setTimeout(()=>f.focus({preventScroll:true}),500)}else location.href=document.documentElement.lang==="es"?"/es/#quote":"/#quote"};
+  setTimeout(hideHi,14000)},6500)}}catch(e){}
 $(".mm-x").onclick=close;
 $(".mm-in").onsubmit=e=>{e.preventDefault();ask(input.value)};
 log.addEventListener("click",e=>{if(!e.target.closest('[data-a="rates"]'))return;close();
