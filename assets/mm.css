@@ -724,3 +724,12 @@ p{margin:0}
 @media (max-width:900px){.hd .brand img{height:21px}}
 @media (max-width:420px){.hd .brand img{height:18px}.hd .acts{gap:8px}}
 @media (max-width:360px){.hd .brand img{height:16px}}
+/* frosted-glass header once the page is scrolled */
+.hd{transition:background-color .35s ease,border-color .35s,box-shadow .35s,backdrop-filter .35s}
+.hd::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);opacity:0;transition:opacity .35s;pointer-events:none}
+.hd.solid{background:rgba(255,255,255,.58);backdrop-filter:blur(22px) saturate(1.9);-webkit-backdrop-filter:blur(22px) saturate(1.9);border-bottom-color:rgba(255,255,255,.45);box-shadow:0 1px 0 rgba(15,27,45,.06),0 10px 30px -12px rgba(11,31,58,.22),inset 0 -1px 0 rgba(255,255,255,.35)}
+.hd.solid::after{opacity:1}
+.hd.solid .lang{background:rgba(255,255,255,.5)}
+.hd.solid .menu{background:rgba(255,255,255,.5)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.hd.solid{background:rgba(255,255,255,.96)}}
+.hd.solid nav a{color:#14243a}
