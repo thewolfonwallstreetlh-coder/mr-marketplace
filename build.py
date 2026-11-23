@@ -20,9 +20,46 @@ I.update({
  "chev":'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 4l4 4-4 4"/></svg>',
 })
 LOGO_DARK = '<img src="/assets/brand/logo-horizontal-dark.png" alt="{b}" width="1319" height="155">'
-NAV = [("Self-employed","/health-insurance-for-self-employed/"),("Business owners","/small-business-health-insurance/"),
-       ("Free tools","/tools/"),("Help center","/help/")]
-NAV_ES = [("Cómo funciona","/es/#how"),("Herramientas","/es/herramientas/"),("Glosario","/es/glosario/"),("Ayuda","/es/ayuda/")]
+NAV = [("Self-employed","/health-insurance-for-self-employed/",[
+            ("Freelancers & 1099","/health-insurance-for-self-employed/","Coverage when you are your own boss"),
+            ("Contractors & trades","/health-insurance-for-contractors/","For builders, electricians, plumbers and more"),
+            ("Realtors","/health-insurance-for-realtors/","For agents and brokers on commission")]),
+       ("Business owners","/small-business-health-insurance/",[
+            ("Small business coverage","/small-business-health-insurance/","Options for you and your team"),
+            ("Family coverage","/family-health-insurance/","Cover your spouse and kids")]),
+       ("Free tools","/tools/",[(t["en"]["name"],t["en"]["slug"],None) for t in TOOLS]+[("See all free tools","/tools/","")]),
+       ("Help center","/help/",[
+            ("Help center","/help/","Answers to common questions"),
+            ("Glossary","/glossary/","Insurance terms in plain English"),
+            ("Licensing & transparency","/trust/","Who we are and how we're paid"),
+            ("Contact us","/contact/","Reach Mr. Marketplace")])]
+NAV_ES = [("Cómo funciona","/es/#how",None),
+          ("Herramientas","/es/herramientas/",[(t["es"]["name"],t["es"]["slug"],None) for t in TOOLS]+[("Ver todas las herramientas","/es/herramientas/","")]),
+          ("Glosario","/es/glosario/",None),
+          ("Ayuda","/es/ayuda/",[
+            ("Centro de ayuda","/es/ayuda/","Respuestas a preguntas comunes"),
+            ("Licencias y transparencia","/es/transparencia/","Quiénes somos y cómo nos pagan"),
+            ("Contacto","/es/contacto/","Comunícate con Mr. Marketplace")])]
+TOOL_DESC = {"credit":("See how much the government may help pay","Calcula cuánto podría ayudarte el gobierno"),
+             "se":("Estimate your tax deduction","Calcula tu deducción de impuestos"),
+             "hsa":("See what an HSA could save you","Mira cuánto podrías ahorrar con una HSA"),
+             "check":("Compare your renewal to new options","Compara tu renovación con otras opciones"),
+             "sep":("Find out if you can enroll now","Averigua si puedes inscribirte ahora")}
+CARET = '<svg class="dd-c" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+def nav_html(es):
+    out = []
+    for i,(n,h,kids) in enumerate(NAV_ES if es else NAV):
+        if not kids:
+            out.append('<a href="%s">%s</a>' % (h, E(n))); continue
+        items = []
+        for j,(kn,kh,kd) in enumerate(kids):
+            if kd is None:
+                t = [x for x in TOOLS if (x["es"] if es else x["en"])["slug"] == kh][0]
+                kd = TOOL_DESC[t["key"]][1 if es else 0]
+            cls = ' class="dd-all"' if kd == "" else ""
+            items.append('<a href="%s"%s><b>%s</b>%s</a>' % (kh, cls, E(kn), ("<small>%s</small>" % E(kd)) if kd else ""))
+        out.append('<div class="dd"><a href="%s" class="dd-t" aria-haspopup="true" aria-expanded="false">%s%s</a><div class="dd-m" role="menu"><div class="dd-in">%s</div></div></div>' % (h, E(n), CARET, "".join(items)))
+    return "".join(out)
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">'
 
 def org_schema():
@@ -65,7 +102,7 @@ def head(title, desc, path, schema, noindex=False, extra_css=""):
           f'<script src="/assets/ga.js" data-id="{E(s["ga4"])}" defer></script>') if s["ga4"] and not noindex else ""
     gsc = f'<meta name="google-site-verification" content="{s["gsc"]}">' if s["gsc"] else ""
     es = LANG["v"] == "es"; home_ = "/es/" if es else "/"
-    nav = "".join(f'<a href="{h}">{n}</a>' for n,h in (NAV_ES if es else NAV))
+    nav = nav_html(es)
     other = (ALT_ES.get(path) if es else ALT.get(path))
     hre = ""
     if other and not noindex:
