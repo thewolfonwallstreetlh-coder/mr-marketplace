@@ -55,7 +55,7 @@ HOME_ES = {
  "diff_fine":"Los agentes con licencia reciben su pago de la aseguradora. Para el mismo plan, su prima es la misma si se inscribe por su cuenta o con un agente con licencia. CuidadoDeSalud.gov muestra todos los planes del Mercado en su área.",
  "faq_kick":"Preguntas","faq_h":"Bueno saberlo antes de empezar.","faq_p":"¿Prefiere hablar?","faq_p2":", o pregunte a nuestro asistente en la esquina.",
  "cta_h":"Su cobertura. Sus decisiones.","cta_p":"Comience hoy su revisión personalizada de cobertura. Toma unos dos minutos.","cta_or":"o",
- "title":"Mr. Marketplace | Seguro médico en español: compare planes del Mercado","desc":"Compare planes de seguro médico del Mercado (Obamacare) de todas las aseguradoras de su área, con precios reales y la ayuda de un profesional con licencia. En español y sin costo.",
+ "title":"Mr. Marketplace | Compare todos los planes de salud del Mercado en un solo lugar","desc":"Su mercado de seguros médicos, más claro. Compare planes y precios reales de todas las aseguradoras de su área, revise sus médicos y medicamentos y reciba ayuda gratis.",
 }
 
 GLOSSARY_ES = [

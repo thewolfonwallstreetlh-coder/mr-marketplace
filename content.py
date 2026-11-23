@@ -4,7 +4,7 @@ Edit SITE, then run:  python3 build.py
 import html, datetime
 SITE = {
     "brand": "Mr. Marketplace",
-    "domain": "https://www.mrmarketplace.com",   # your real domain, no trailing slash
+    "domain": "https://mr-marketplace.netlify.app",   # your live address, no trailing slash (change when you buy a domain)
     "legal_name": "[Your Name or Business Legal Name]",
     "operator": "[Your Name or Business Legal Name]",
     "phone": "(727) 339-2891",              # dialed by every "Call Mr. Marketplace" button; never shown on the site

@@ -116,7 +116,7 @@ def head(title, desc, path, schema, noindex=False, extra_css=""):
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{E(title)}</title><meta name="description" content="{E(desc)}">
 <link rel="canonical" href="{url}">{hre}<meta name="robots" content="{'noindex, nofollow' if noindex else 'index, follow, max-image-preview:large'}">
-<meta property="og:type" content="website"><meta property="og:locale" content="{"es_US" if es else "en_US"}"><meta property="og:site_name" content="{E(s['brand'])}"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{s['domain']}/assets/brand/logo-full-dark.png"><meta name="twitter:card" content="summary_large_image">
+<meta property="og:type" content="website"><meta property="og:locale" content="{"es_US" if es else "en_US"}"><meta property="og:site_name" content="{E(s['brand'])}"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{s['domain']}/assets/brand/social-card{"-es" if es else ""}.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="{E(s['brand'])}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{E(title)}"><meta name="twitter:description" content="{E(desc)}"><meta name="twitter:image" content="{s['domain']}/assets/brand/social-card{"-es" if es else ""}.png">
 <meta name="theme-color" content="#0b1f3a"><link rel="icon" href="/assets/brand/icon-48.png" type="image/png"><link rel="apple-touch-icon" href="/assets/brand/icon-180.png">{gsc}
 {FONTS}
 <link rel="stylesheet" href="/assets/mm.css"><link rel="stylesheet" href="/assets/mascot.css">{extra_css}
@@ -196,7 +196,7 @@ HOME_EN = {
  "diff_fine":"Licensed agents are paid by the insurance company. For the same plan, your premium is the same whether you enroll on your own or through a licensed agent. HealthCare.gov lists all Marketplace plans available in your area.",
  "faq_kick":"Questions","faq_h":"Good to know before you start.","faq_p":"Prefer to talk?","faq_p2":", or ask our assistant in the corner.",
  "cta_h":"Your coverage. Your choices.","cta_p":"Begin your personalized coverage review today. It takes about two minutes.","cta_or":"or",
- "title":"Mr. Marketplace | Your Coverage. Your Priorities. Your Choices.","desc":"A more personalized way to shop for health insurance. See real plans and prices from every insurance company in your area and connect with a licensed professional.",
+ "title":"Mr. Marketplace | Compare Every Marketplace Health Plan in One Place","desc":"Your health insurance marketplace, made clear. Compare real plans and prices from every insurer in your area, check your doctors and drugs, and get free expert help.",
 }
 SEGS_EN = [("Self-employed","Founders, consultants & 1099","/health-insurance-for-self-employed/"),("Business owners","You and your team","/small-business-health-insurance/"),
            ("Real estate","Agents & brokers","/health-insurance-for-realtors/"),("Contractors","Owner-operators & trades","/health-insurance-for-contractors/"),("Families","Spouses & children","/family-health-insurance/")]
@@ -253,7 +253,7 @@ def home(path="/", noindex=False):
  <div class="up"><span class="kick">{C['demo_kick']}</span><h2 class="h2">{C['demo_h']}</h2><p class="demo-p">{C['demo_p']}</p>
   <ol class="demo-steps">{steps_html}</ol>
   <a class="btn btn-navy" href="#quote" data-quote>{C['cta']} {I['arrow']}</a></div>
- <div class="demo up" aria-hidden="true"><div class="dbar"><i></i><i></i><i></i><span>mrmarketplace.com</span></div>
+ <div class="demo up" aria-hidden="true"><div class="dbar"><i></i><i></i><i></i><span>mr-marketplace.netlify.app</span></div>
   <div class="dbody"><div class="dhead"><b>52 {L("plans","planes")}</b><span class="dsort">{C["demo_lbl"][4]}</span></div>
    {rows_html}
   </div></div>
