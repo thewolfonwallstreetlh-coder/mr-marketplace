@@ -6,7 +6,7 @@ export const NAMES={AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"Cali
 export const ZIP3=[[5,5,"NY"],[10,27,"MA"],[28,29,"RI"],[30,38,"NH"],[39,49,"ME"],[50,59,"VT"],[60,69,"CT"],[70,89,"NJ"],[100,149,"NY"],[150,196,"PA"],[197,199,"DE"],[200,205,"DC"],[206,219,"MD"],[220,246,"VA"],[247,268,"WV"],[270,289,"NC"],[290,299,"SC"],[300,319,"GA"],[320,349,"FL"],[350,369,"AL"],[370,385,"TN"],[386,397,"MS"],[398,399,"GA"],[400,427,"KY"],[430,459,"OH"],[460,479,"IN"],[480,499,"MI"],[500,528,"IA"],[530,549,"WI"],[550,567,"MN"],[569,569,"DC"],[570,577,"SD"],[580,588,"ND"],[590,599,"MT"],[600,629,"IL"],[630,658,"MO"],[660,679,"KS"],[680,693,"NE"],[700,714,"LA"],[716,729,"AR"],[730,749,"OK"],[750,799,"TX"],[800,816,"CO"],[820,831,"WY"],[832,838,"ID"],[840,847,"UT"],[850,865,"AZ"],[870,884,"NM"],[885,885,"TX"],[889,898,"NV"],[900,961,"CA"],[967,968,"HI"],[970,979,"OR"],[980,994,"WA"],[995,999,"AK"]];
 
 
-import { createHmac, createHash, timingSafeEqual } from "node:crypto";
+import { createHmac, createHash, timingSafeEqual, scryptSync, randomBytes } from "node:crypto";
 
 export const json = (b, s = 200, extra = {}) => new Response(JSON.stringify(b), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", "referrer-policy": "no-referrer", ...extra } });
 
@@ -52,7 +52,7 @@ export function settings() {
   try { agents = JSON.parse(env("AGENTS", "[]")); } catch { agents = []; }
   if (!agents.length) agents = [{ id: "owner", name: env("SPECIALIST_NAME", "Your Mr. Marketplace specialist"), phone: env("SPECIALIST_PHONE", "(727) 339-2891"), title: "Licensed Health Insurance Specialist", states: ["*"], products: ["*"], active: true }];
   return {
-    agents,
+    agents, envAgents: agents.map((a) => ({ ...a })),
     licensedStates: env("LICENSED_STATES").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     minIncome: Number(env("INCOME_MINIMUM", "60000")) || 60000,   // households below this go to HealthCare.gov
     sendCategoryD: env("SEND_CATEGORY_D", "false") === "true",
@@ -107,9 +107,12 @@ export function qualify(L, cfg, extraFlags = []) {
 
 /* ---------- routing: licensed state + product + workload ---------- */
 export async function route(L, cfg, store) {
-  const ok = cfg.agents.filter((a) => a.active !== false &&
+  await loadAdvisors(cfg, store);
+  const fits = (list) => list.filter((a) => a.active !== false &&
     (a.states || ["*"]).some((s) => s === "*" || s.toUpperCase() === L.location.state) &&
     (a.products || ["*"]).some((p) => p === "*" || p === L.product));
+  const paid = fits(cfg.agents.filter((a) => a.advisor));        // paying advisors licensed in this state get the lead
+  const ok = paid.length ? paid : fits(cfg.agents.filter((a) => !a.advisor));   // otherwise it comes to you
   if (!ok.length) return null;
   let best = null, bestLoad = Infinity;
   for (const a of ok) {
@@ -191,8 +194,10 @@ export async function alert(L, cfg, event = "new_lead", extra = {}) {
     const hot = body.priority === "A - CALL NOW";
     const label = { new_lead: "New lead", qualified: "Lead finished qualifying", repeat_request: "Returning lead" }[event] || event.replace(/_/g, " ");
     const subject = oneLine(`${hot ? "🔥 CALL NOW: " : ""}${label}: ${body.name}, ${body.state}${body.language === "SPANISH" ? " (Spanish)" : ""}`);
-    jobs.push(fetch("https://api.resend.com/emails", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${cfg.resendKey}` },
-      body: JSON.stringify({ from: cfg.alertFrom, to, subject, html: leadEmailHtml(body, label, hot), text: leadEmailText(body, label) }) }).catch(() => {}));
+    // one email per person, so a recipient Resend won't accept (e.g. before your domain is verified) never blocks yours
+    for (const r of [...new Set(to.join(",").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean))])
+      jobs.push(fetch("https://api.resend.com/emails", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${cfg.resendKey}` },
+        body: JSON.stringify({ from: cfg.alertFrom, to: [r], subject, html: leadEmailHtml(body, label, hot), text: leadEmailText(body, label) }) }).catch(() => {}));
   }
   await Promise.all(jobs);
 }
@@ -203,24 +208,34 @@ export async function alert(L, cfg, event = "new_lead", extra = {}) {
    Passwords shorter than 12 characters are refused. Optional: CRM_ALLOWED_IPS=1.2.3.4,5.6.7.8 */
 export const MIN_PW = 12, SESSION_HOURS = 12;
 const pwHash = (pw) => createHash("sha256").update("mm-pw:" + pw).digest("hex").slice(0, 16);
-const secret = (cfg) => process.env.SESSION_SECRET || createHash("sha256").update("mm-session:" + (cfg.adminPassword || "") + JSON.stringify(cfg.agents.map((a) => a.password || ""))).digest("hex");
+const secret = (cfg) => process.env.SESSION_SECRET || createHash("sha256").update("mm-session:" + (cfg.adminPassword || "") + JSON.stringify((cfg.envAgents || cfg.agents).map((a) => a.password || ""))).digest("hex");
 export function users(cfg) {
   const list = [];
   if (cfg.adminPassword && cfg.adminPassword.length >= MIN_PW) list.push({ role: "admin", id: "admin", name: process.env.ADMIN_NAME || "Admin", pw: cfg.adminPassword });
-  for (const a of cfg.agents) if (a.password && a.password.length >= MIN_PW && a.active !== false) list.push({ role: "agent", id: a.id, name: a.name, pw: a.password });
+  for (const a of cfg.agents) {
+    if (a.advisor) { if (a.pwh && a.active !== false) list.push({ role: "agent", id: a.id, name: a.name, email: a.email, pwh: a.pwh, pwv: a.pwv, advisor: true }); }
+    else if (a.password && a.password.length >= MIN_PW && a.active !== false) list.push({ role: "agent", id: a.id, name: a.name, pw: a.password });
+  }
   return list;
 }
 export function ipAllowed(ip) {
   const allow = (process.env.CRM_ALLOWED_IPS || "").split(",").map((x) => x.trim()).filter(Boolean);
   return !allow.length || allow.includes(ip);
 }
-export function checkPassword(cfg, pw) {
+export function checkPassword(cfg, pw, email) {
+  if (email) {   // advisors sign in with email + password
+    const e = String(email).trim().toLowerCase();
+    const u = users(cfg).find((x) => x.advisor && (x.email || "").toLowerCase() === e);
+    const ok = verifyPw(pw, u ? u.pwh : DUMMY_HASH);   // always do the slow check so timing doesn't reveal which emails exist
+    return u && ok ? u : null;
+  }
   let hit = null;
-  for (const u of users(cfg)) if (same(pw, u.pw) && !hit) hit = u; // check every user so timing doesn't reveal which one matched
+  for (const u of users(cfg)) if (!u.advisor && same(pw, u.pw) && !hit) hit = u; // check every user so timing doesn't reveal which one matched
   return hit;
 }
+const sessionTag = (u) => u.pwv || pwHash(u.pw);
 export function issue(cfg, u) {
-  const p = Buffer.from(JSON.stringify({ r: u.role, i: u.id, h: pwHash(u.pw), e: Date.now() + SESSION_HOURS * 36e5 })).toString("base64url");
+  const p = Buffer.from(JSON.stringify({ r: u.role, i: u.id, h: sessionTag(u), e: Date.now() + SESSION_HOURS * 36e5 })).toString("base64url");
   return p + "." + createHmac("sha256", secret(cfg)).update(p).digest("base64url");
 }
 export function who(req, cfg) {
@@ -231,8 +246,8 @@ export function who(req, cfg) {
   let d; try { d = JSON.parse(Buffer.from(p, "base64url").toString()); } catch { return null; }
   if (!d || d.e < Date.now()) return null;
   const u = users(cfg).find((x) => x.id === d.i && x.role === d.r);
-  if (!u || !same(pwHash(u.pw), d.h)) return null;
-  return { role: u.role, id: u.id, name: u.name };
+  if (!u || !same(sessionTag(u), d.h)) return null;
+  return { role: u.role, id: u.id, name: u.name, advisor: !!u.advisor };
 }
 export const STATUSES = ["received", "assigned", "contacted", "quoting", "application", "enrolled", "lost"];
 export const OPEN = (s) => !["enrolled", "lost"].includes(s);
@@ -255,4 +270,36 @@ export async function confirm(L, cfg) {
     <p style="font-size:12px;color:#6b7a8f">Mr. Marketplace connects you with licensed insurance professionals. It is not HealthCare.gov. You received this because you requested a coverage review and agreed to email. Reply to opt out.</p></div>`;
   await fetch("https://api.resend.com/emails", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${cfg.resendKey}` },
     body: JSON.stringify({ from: cfg.alertFrom, to: [L.contact.email], subject: es ? "Su revisión de cobertura ha comenzado" : "Your coverage review has started", html }) }).catch(() => {});
+}
+
+/* ---------- paid advisors ($500/week) ----------
+   Stored in Blobs as advisor/<id>. Only "active" advisors whose payment is current get leads or can sign in. */
+export const ADV_STATUSES = ["applied", "approved", "active", "past_due", "paused", "canceled", "rejected"];
+export const ADV_ID_RE = /^[a-f0-9]{12}$/;
+export const hashPw = (pw) => { const salt = randomBytes(16).toString("hex"); return salt + ":" + scryptSync(pw, salt, 32).toString("hex"); };
+export function verifyPw(pw, stored) {
+  const [salt, h] = String(stored || "").split(":");
+  if (!salt || !h) return false;
+  try { return timingSafeEqual(Buffer.from(h, "hex"), scryptSync(String(pw), salt, 32)); } catch { return false; }
+}
+const DUMMY_HASH = "00000000000000000000000000000000:" + "0".repeat(64);
+export const advisorLive = (a, now = Date.now()) => !!a && a.status === "active" && (!a.paid_through || Date.parse(a.paid_through) > now);
+export async function listAdvisors(store) {
+  const { blobs } = await store.list({ prefix: "advisor/" });
+  return (await Promise.all(blobs.map((b) => store.get(b.key, { type: "json" })))).filter(Boolean);
+}
+export async function loadAdvisors(cfg, store) {
+  if (cfg._adv) return cfg;
+  cfg._adv = true;
+  try {
+    for (const a of await listAdvisors(store)) cfg.agents.push({ id: a.id, name: a.name, phone: a.phone, email: a.email, title: "Licensed Mr. Marketplace Advisor",
+      states: a.states || [], products: ["*"], active: advisorLive(a), advisor: true, pwh: a.pwh, pwv: a.pwv });
+  } catch {}
+  return cfg;
+}
+export async function notifyOwner(cfg, subject, lines) {
+  if (!cfg.resendKey || !cfg.alertEmail) return;
+  const html = `<div style="font:15px/1.6 Arial,sans-serif;color:#1c2733">${lines.map((l) => `<p style="margin:0 0 8px">${htmlEsc(l)}</p>`).join("")}</div>`;
+  await fetch("https://api.resend.com/emails", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${cfg.resendKey}` },
+    body: JSON.stringify({ from: cfg.alertFrom, to: cfg.alertEmail.split(",").map((x) => x.trim()).filter(Boolean), subject: oneLine(subject), html, text: lines.join("\n") }) }).catch(() => {});
 }
