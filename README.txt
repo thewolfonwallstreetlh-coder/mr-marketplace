@@ -171,3 +171,12 @@ CONTACT PERMISSION
    There are no checkboxes. One short line under the Continue button explains that tapping it lets you
    contact them by call, text or email. That sentence is your legal permission to call and text, and it's
    saved word for word with every lead. Keep it there.
+
+ADVISOR PROGRAM ($500/week)
+  Join page: /agents/   ·   Manage advisors: CRM → Advisors (admin only)
+  Netlify keys:
+    STRIPE_PAYMENT_LINK     Your Stripe Payment Link for the $500 weekly subscription (https://buy.stripe.com/...)
+    STRIPE_WEBHOOK_SECRET   From Stripe → Developers → Webhooks, endpoint https://YOUR-SITE/api/advisor/stripe
+                            Events: checkout.session.completed, invoice.paid, invoice.payment_failed,
+                            customer.subscription.deleted, customer.subscription.updated
+    SESSION_SECRET          Optional: any long random text; keeps everyone signed in across password changes

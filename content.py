@@ -5,15 +5,15 @@ import html, datetime
 SITE = {
     "brand": "Mr. Marketplace",
     "domain": "https://mr-marketplace.netlify.app",   # your live address, no trailing slash (change when you buy a domain)
-    "legal_name": "[Your Name or Business Legal Name]",
-    "operator": "[Your Name or Business Legal Name]",
+    "legal_name": "Joseph Frazier",   # change to your LLC name if you have one
+    "operator": "Joseph Frazier",
     "phone": "(727) 339-2891",              # dialed by every "Call Mr. Marketplace" button; never shown on the site
     "phone_href": "+17273392891",
-    "email": "hello@mrmarketplace.com",
-    "address": "[Street Address], [City], [ST] [ZIP]",
+    "email": "president@mrmarketplace.co",
+    "address": "",   # mailing address shown in the footer and contact page; leave empty to hide
     "hours": "Monday to Friday, 8am to 8pm ET · Saturday, 9am to 2pm ET",
-    "advisor": "Your Name",                       # the licensed agent named on guide pages
-    "advisor_title": "Licensed Health Insurance Specialist",
+    "advisor": "Joseph Frazier",                       # the licensed agent named on guide pages
+    "advisor_title": "President & Senior Advisor",
     # Carriers you are appointed with: (display name, logo file). Get approved logo files from each
     # carrier's broker marketing portal and put them in assets/, e.g. "/assets/uhc.svg". Empty = elegant text wordmark.
     # Confirm the exact underwriting company names with your agency (Allstate sold parts of its health business in 2025).
@@ -180,7 +180,7 @@ PAGES = [
 ]
 
 
-SITE["consent_version"] = "2026-11-v1"   # bump whenever you change the consent wording on the form
+SITE["consent_version"] = "2026-11-v2"   # bump whenever you change the consent wording on the form
 
 # ---------------------------------------------------------------- products
 # Turn on ONLY the products you are licensed and appointed to sell.
@@ -196,7 +196,7 @@ HOME_FAQ = [
  ("What is Mr. Marketplace?", "Mr. Marketplace is the easiest way to shop for health insurance and connect with a licensed professional. You tell us about yourself, see real Marketplace plans and prices from every insurance company in your area, and a licensed professional helps you choose."),
  ("Are the prices real?", "Yes. For individual and family health coverage in most states, prices come from the same federal Marketplace data that HealthCare.gov uses, based on the ages, ZIP code and income you enter. Final premiums are confirmed at enrollment."),
  ("Does it cost anything?", "No. Licensed agents are paid by the insurance company. For the same plan, your premium is the same whether you enroll on your own or with a licensed agent."),
- ("Will my information be sold?", "No. Your request goes to one licensed professional and is never sold or shared with other agents or lead buyers. You choose how you'd like to be contacted."),
+ ("Will I get a flood of calls?", "No. Your request goes to one licensed Mr. Marketplace advisor in your state. It's never put on a lead list or passed around to multiple agents, and you choose how you'd like to be contacted."),
  ("Is this HealthCare.gov?", "No. Mr. Marketplace is not a government site and not an insurance company. HealthCare.gov lists every Marketplace plan in your area."),
  ("Do you help with Medicare?", "Not at this time. Our platform is for individuals, families and business owners under 65. If you're 65 or older, Medicare.gov is the best place to compare your options."),
 ]
@@ -205,16 +205,16 @@ ABOUT = f"""<h2>Insurance should be easier to understand.</h2><p>Shopping for co
 <h2>How it works</h2><ul><li><strong>Tell us what you need.</strong> A short, personalized assessment that adapts to your answers.</li><li><strong>See every option.</strong> Real Marketplace plans and prices from every insurance company in your area.</li><li><strong>Let a licensed professional handle the rest.</strong> We call or text you, answer your questions and take care of enrollment.</li></ul>
 <h2 id="how-we-are-paid">How we're paid</h2><p>Using {E(SITE['brand'])} is free. If you enroll through your licensed agent, the insurance company pays a commission. Commissions are built into plan pricing and don't increase your premium. The plans you see are Marketplace plans from the insurance companies in your area. You can also enroll in any Marketplace plan directly at HealthCare.gov or your state's marketplace.</p>
 <h2>Licensing</h2><p>{E(SITE['brand'])} is operated by {E(SITE['legal_name'])}, a licensed health insurance agent. {E(SITE['states_line'])}</p>
-<h2>Contact</h2><p><a href="tel:{SITE['phone_href']}">Call Mr. Marketplace</a><br>Email: <a href="mailto:{SITE['email']}">{E(SITE['email'])}</a><br>{E(SITE['hours'])}<br>{E(SITE['address'])}</p>"""
+<h2>Contact</h2><p><a href="tel:{SITE['phone_href']}">Call Mr. Marketplace</a><br>Email: <a href="mailto:{SITE['email']}">{E(SITE['email'])}</a><br>{E(SITE['hours'])}{('<br>' + E(SITE['address'])) if SITE['address'] else ''}</p>"""
 
 PRIVACY = f"""<p><em>Last updated {UPDATED}. Have this policy reviewed by your attorney before publishing.</em></p>
 <h2>Information we collect</h2><p>When you use {E(SITE['brand'])} we collect the information you provide, such as your name, phone number, email, ZIP code, household ages, current coverage, desired start date, budget, approximate household income, and any doctors or prescription needs you choose to share. We also record technical information such as IP address, browser type, pages visited and referring website.</p>
 <h2>Consent records</h2><p>When you agree to be contacted, we keep a record of the exact wording you agreed to, the version of the form, the date and time, your IP address and your browser. You give separate permission for phone calls, text messages and email. We keep these records as required by law.</p>
 <h2>How we use it</h2><p>We use your information to show you available plans, contact you in the ways you chose, help you apply for coverage if you decide to, and improve our service.</p>
-<h2 id="do-not-sell">We do not sell your information</h2><p>We do not sell or rent your personal information to other agents, lead buyers or marketers. We share it only with the licensed professional assigned to help you, the insurance companies you choose to apply with, service providers that help us operate (such as secure hosting, email and phone systems), and as required by law.</p>
+<h2 id="do-not-sell">How your request is shared</h2><p>Your request is assigned to one licensed Mr. Marketplace advisor in your state. Advisors are licensed insurance agents who work with Mr. Marketplace and pay a membership fee to use our platform and receive requests. We never give your request to more than one advisor, and we never sell or rent your information to lead buyers, marketing lists or data brokers. We share it only with the advisor assigned to help you, the insurance companies you choose to apply with, service providers that help us operate (such as secure hosting, email and phone systems), and as required by law.</p>
 <h2>Your choices</h2><p>You can withdraw consent, update your information, or ask us to access or delete it at any time by emailing <a href="mailto:{SITE['email']}">{E(SITE['email'])}</a> or by tapping <a href="tel:{SITE['phone_href']}">Call Mr. Marketplace</a>. Reply STOP to any text message to stop texts.</p>
 <h2>Security</h2><p>Information is encrypted in transit and at rest, and access is limited to people who need it to serve you.</p>
-<h2>Contact</h2><p>{E(SITE['legal_name'])}, {E(SITE['address'])}</p>"""
+<h2>Contact</h2><p>{E(SITE['legal_name'])}{(', ' + E(SITE['address'])) if SITE['address'] else ''}</p>"""
 
 TERMS = f"""<p><em>Last updated {UPDATED}. Have these terms reviewed by your attorney before publishing.</em></p>
 <h2>About this site</h2><p>{E(SITE['brand'])} is a health insurance shopping website operated by {E(SITE['legal_name'])}, a licensed health insurance agent. It is not a government website and not an insurance company. Content is general information, not tax, legal or medical advice.</p>

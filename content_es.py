@@ -16,7 +16,7 @@ HOME_FAQ_ES = [
  ("¿Qué es Mr. Marketplace?", "Mr. Marketplace es la forma más fácil de comparar seguros médicos y conectar con un profesional con licencia. Usted nos cuenta sobre su hogar, ve planes y precios reales del Mercado de todas las aseguradoras de su área, y un profesional con licencia le ayuda a elegir."),
  ("¿Los precios son reales?", "Sí. Para la cobertura individual y familiar en la mayoría de los estados, los precios provienen de los mismos datos federales del Mercado que usa CuidadoDeSalud.gov, según las edades, el código postal y el ingreso que usted ingrese. Las primas finales se confirman al inscribirse."),
  ("¿Tiene algún costo?", "No. Los agentes con licencia reciben su pago de la aseguradora. Para el mismo plan, su prima es la misma si se inscribe por su cuenta o con un agente con licencia."),
- ("¿Venderán mi información?", "No. Su solicitud va a un solo profesional con licencia y nunca se vende ni se comparte con otros agentes o compradores de contactos. Usted elige cómo prefiere que le contactemos."),
+ ("¿Me van a llamar muchas personas?", "No. Su solicitud va a un solo asesor con licencia de Mr. Marketplace en su estado. Nunca va a una lista de contactos ni se pasa a varios agentes, y usted elige cómo prefiere que le contactemos."),
  ("¿Esto es CuidadoDeSalud.gov?", "No. Mr. Marketplace no es un sitio del gobierno ni una aseguradora. CuidadoDeSalud.gov muestra todos los planes del Mercado en su área."),
  ("¿Ayudan con Medicare?", "Por ahora no. Nuestra plataforma es para personas, familias y dueños de negocio menores de 65 años. Si tiene 65 años o más, es.medicare.gov es el mejor lugar para comparar sus opciones."),
 ]
@@ -25,7 +25,7 @@ HOME_ES = {
  "eyebrow":"Seguro médico, claro y sencillo","h1":"Su cobertura. Sus prioridades. Sus decisiones.",
  "lead":"Vea planes y precios reales de todas las aseguradoras de su área y reciba ayuda de un profesional con licencia.",
  "cta":"Comenzar mi revisión","how":"Cómo funciona",
- "ticks":["Planes y precios reales","Todas las aseguradoras","Profesionales con licencia","Nunca vendemos su información"],
+ "ticks":["Planes y precios reales","Todas las aseguradoras","Profesionales con licencia","Un solo asesor, nunca una lista"],
  "loading":"Cargando… Si no carga,","carriers":"Planes disponibles<br>a través de","more":"y todas las demás aseguradoras del Mercado en su área",
  "how_kick":"Cómo funciona","how_h":"El seguro médico debería ser fácil de entender.","how_p":"Tres pasos desde \"necesito cobertura\" hasta una respuesta clara.",
  "steps":[("Cuéntenos sobre usted","Su estado, su hogar y cómo contactarle. Toma menos de un minuto."),("Personalice su revisión","Unas preguntas más y luego planes y precios mensuales reales de todas las aseguradoras de su área."),("Hable con un profesional con licencia","Un profesional con licencia le llama o le escribe para ayudarle a elegir e inscribirse. Siga su solicitud en línea en cualquier momento.")],

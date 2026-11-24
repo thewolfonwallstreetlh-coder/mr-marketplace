@@ -158,7 +158,7 @@ def foot(scripts=("mm.js","mascot.js")):
   {cols}
  </div>
  <div class="legal">{legal_html()}</div>
- <div class="bot"><span>&copy; {y} {E(s['brand'])}<a class="agent-in" href="/crm/" rel="nofollow">{L("Agent sign-in","Acceso para agentes")}</a></span>{bot}</div>
+ <div class="bot"><span>&copy; {y} {E(s['brand'])}<a class="agent-in" href="/crm/" rel="nofollow">{L("Agent sign-in","Acceso para agentes")}</a><a class="agent-in" href="/agents/" rel="nofollow">{L("Become an advisor","Hágase asesor")}</a></span>{bot}</div>
 </div></footer>
 {sc}
 </body></html>"""
@@ -167,7 +167,7 @@ def foot(scripts=("mm.js","mascot.js")):
 HOME_EN = {
  "eyebrow":"Health insurance, made clear","h1":"Your coverage. Your priorities. Your choices.",
  "lead":"See real plans and prices from every insurance company in your area, then get help from a licensed professional.",
- "cta":"Begin my review","how":"How it works","ticks":["Real plans and prices","Every insurance company","Licensed professionals","Never sold to other agents"],
+ "cta":"Begin my review","how":"How it works","ticks":["Real plans and prices","Every insurance company","Licensed professionals","One advisor, never a lead list"],
  "loading":"Loading&hellip; If this doesn't load,","carriers":"Plans available<br>through","more":"and every other Marketplace insurance company in your area",
  "how_kick":"How it works","how_h":"Insurance should be easier to understand.","how_p":"Three steps from \"I need coverage\" to a clear answer.",
  "steps":[("Tell us about yourself","Your state, your household and how to reach you. It takes under a minute."),("Personalize your review","A few more questions, then real plans and monthly prices from every insurance company in your area."),("Talk to a licensed professional","A licensed professional calls or texts you to help you choose and enroll. Track your request online at any time.")],
@@ -301,7 +301,7 @@ def landing(p):
  <aside class="aside">
   <div class="aside-card"><h3>See your options in two minutes.</h3><p>Real plans and prices, plus one licensed professional to help you choose.</p>
   <a class="btn btn-white" href="/#quote">See my rates</a>
-  <ul><li>{I['check']}No cost, no obligation</li><li>{I['check']}Never sold to other agents</li><li>{I['check']}Every Marketplace carrier</li></ul></div>
+  <ul><li>{I['check']}No cost, no obligation</li><li>{I['check']}One advisor, never a lead list</li><li>{I['check']}Every Marketplace carrier</li></ul></div>
   <nav class="toc"><h4>On this page</h4>{toc}<a href="#faq">Common questions</a></nav>
  </aside>
 </div></div>
@@ -323,6 +323,58 @@ def simple(path, title, desc, h1, lead, content, noindex=False, scripts=("mm.js"
     hero = f'<section class="phero"><div class="container"><nav class="crumbs" aria-label="Breadcrumb"><a href="{base}">{L("Home","Inicio")}</a><span>/</span>{trail}{E(h1)}</nav><h1>{E(h1)}</h1><p class="lead">{E(lead)}</p></div></section>' if h1 else ""
     return head(title, desc, path, schema, noindex=noindex, extra_css=extra_css) + hero + content + foot(scripts)
 
+STATE_CODES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split()
+STATE_OPTS = "".join('<label class="agt-st"><input type="checkbox" name="states" value="%s"><span>%s</span></label>' % (k, k) for k in STATE_CODES)
+def agents_page():
+    inc = [("Exclusive leads","Each request goes to one advisor only. Never shared, never a list."),
+           ("Your licensed states only","Leads are matched to the states on your license, so you can enroll every one."),
+           ("Warm, consumer-requested","People who asked for help, saw real plans and prices, and chose how to be contacted."),
+           ("The Mr. Marketplace CRM","Today view, pipeline, tasks, call logging and the full consent record for each lead."),
+           ("Instant alerts","An email with one-tap call and text buttons the moment a lead is assigned to you."),
+           ("Your own @mrmarketplace.co email","A professional address under the Mr. Marketplace brand.")]
+    inc_html = "".join('<li><b>%s</b><span>%s</span></li>' % (E(a), E(b)) for a, b in inc)
+    steps = [("Apply","Tell us your NPN and the states you're licensed in."),("License check","We verify your license and Marketplace registration."),
+             ("Start your membership","Pay $500/week by card through Stripe. Cancel anytime."),("Get leads","New requests in your states go straight to your CRM.")]
+    steps_html = "".join('<li><i>%d</i><b>%s</b><span>%s</span></li>' % (i + 1, E(a), E(b)) for i, (a, b) in enumerate(steps))
+    lead_fields = ["Name, phone and email","Household size and ages","Coverage timeline and budget","Current coverage and premium","Plans and prices they already viewed","Lead grade and score","Exact consent they gave, with time and IP"]
+    lf_html = "".join("<li>%s</li>" % E(x) for x in lead_fields)
+    body = f"""<section class="agt-hero"><div class="container agt-hgrid">
+ <div><span class="agt-eye">For licensed health insurance agents</span><h1>Become a Mr.&nbsp;Marketplace Advisor</h1>
+ <p class="lead">Exclusive, consumer-requested health insurance leads in your licensed states, delivered to your own CRM the moment they come in.</p>
+ <a class="btn btn-white" href="#apply">Apply now</a></div>
+ <div class="agt-price"><span class="agt-k">Advisor membership</span><div class="agt-amt"><b>$500</b><span>/ week</span></div><ul>{inc_html}</ul><a class="btn btn-navy" href="#apply">Apply now</a><small>Billed weekly through Stripe. Cancel anytime.</small></div>
+</div></section>
+<section class="agt-sec"><div class="container"><h2>How it works</h2><ol class="agt-steps">{steps_html}</ol></div></section>
+<section class="agt-sec agt-alt"><div class="container agt-two">
+ <div><h2>What you get with every lead</h2><ul class="agt-list">{lf_html}</ul></div>
+ <div><h2>Requirements</h2><ul class="agt-list"><li>An active health insurance license in every state you select</li><li>Current Marketplace (FFM) registration for the plan year</li><li>Contact people only in the ways they agreed to, and honor every opt-out</li><li>Represent yourself as a Mr. Marketplace advisor when you reach out</li></ul></div>
+</div></section>
+<section class="agt-sec"><div class="container agt-terms"><h2>Membership terms</h2><ul>
+ <li><b>Price.</b> $500 per week, billed automatically each week by card through Stripe until you cancel.</li>
+ <li><b>Cancel anytime.</b> Canceling stops future charges. Access continues through the week you've paid for. Weekly fees already charged are not refunded.</li>
+ <li><b>No guaranteed volume.</b> The number of leads depends on how many people in your licensed states request help. Some weeks will bring more than others.</li>
+ <li><b>Exclusive and non-transferable.</b> Each lead goes to one advisor. Leads may not be resold, shared or added to other lists.</li>
+ <li><b>Compliance.</b> Calls, texts and emails must follow each person's recorded consent and all federal and state rules. Misuse ends your membership without refund.</li>
+ <li><b>Payment issues.</b> If a weekly payment fails, lead delivery and CRM access pause until it's resolved.</li>
+</ul></div></section>
+<section class="agt-sec agt-alt" id="apply"><div class="container agt-formwrap"><h2>Apply to become an advisor</h2><p>We review every application, usually within one business day.</p>
+<form class="agt-form" id="agt-form" novalidate>
+ <div class="agt-g2"><label>First name<input name="first" autocomplete="given-name" required></label><label>Last name<input name="last" autocomplete="family-name" required></label></div>
+ <div class="agt-g2"><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Mobile phone<input name="phone" type="tel" autocomplete="tel" required></label></div>
+ <div class="agt-g2"><label>National Producer Number (NPN)<input name="npn" inputmode="numeric" required></label><label>Years licensed<select name="experience"><option>Under 1 year</option><option>1 to 3 years</option><option>3 to 5 years</option><option>5+ years</option></select></label></div>
+ <fieldset><legend>States you're licensed in for health insurance</legend><div class="agt-states">{STATE_OPTS}</div></fieldset>
+ <fieldset><legend>Marketplace (FFM) registration</legend><label class="agt-ck"><input type="radio" name="ffm" value="yes"> I'm registered for the current plan year</label><label class="agt-ck"><input type="radio" name="ffm" value="no"> Not yet</label></fieldset>
+ <fieldset><legend>Languages you work in</legend><label class="agt-ck"><input type="checkbox" name="languages" value="English" checked> English</label><label class="agt-ck"><input type="checkbox" name="languages" value="Spanish"> Spanish</label></fieldset>
+ <label>Anything else we should know? (optional)<textarea name="note" maxlength="600"></textarea></label>
+ <input class="agt-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+ <label class="agt-ck agt-agree"><input type="checkbox" name="agree"> I agree to the membership terms above and confirm my license information is accurate.</label>
+ <p class="agt-err" role="alert"></p>
+ <button class="btn btn-navy" type="submit">Submit application</button>
+</form>
+<div class="agt-done" hidden><h3>Application received</h3><p>Thank you. We'll verify your license and email you next steps, usually within one business day.</p></div>
+</div></section>"""
+    return simple("/agents/", f"Become a Mr. Marketplace Advisor | Exclusive Health Insurance Leads", "Exclusive, consumer-requested health insurance leads in your licensed states, plus the Mr. Marketplace CRM. $500/week, cancel anytime.", "", "", body, noindex=True, scripts=("mm.js","agents.js"))
+
 def write(path, content):
     out = "dist/index.html" if path == "/" else os.path.join("dist", path.strip("/"), "index.html")
     os.makedirs(os.path.dirname(out), exist_ok=True)
@@ -338,7 +390,7 @@ def main():
     for p in PAGES:
         path, c = landing(p); write(path, c); urls.append(path)
     write("/about/", simple("/about/", f"About {s['brand']} | A Smarter Way to Find Your Insurance", f"About {s['brand']}: compare Marketplace health plans from every insurance company, with a licensed professional.", f"About {s['brand']}", "A smarter way to find your insurance.", f'<div class="container"><div class="prose narrow" style="padding:72px 0 104px">{ABOUT}</div></div>')); urls.append("/about/")
-    write("/privacy/", simple("/privacy/", f"Privacy Policy | {s['brand']}", "How we collect, use and protect your information.", "Privacy policy", "Your information is used to help you, and is never sold.", f'<div class="container"><div class="prose narrow" style="padding:72px 0 104px">{PRIVACY}</div></div>')); urls.append("/privacy/")
+    write("/privacy/", simple("/privacy/", f"Privacy Policy | {s['brand']}", "How we collect, use and protect your information.", "Privacy policy", "Your information is used to help you, and never goes on a lead list.", f'<div class="container"><div class="prose narrow" style="padding:72px 0 104px">{PRIVACY}</div></div>')); urls.append("/privacy/")
     write("/terms/", simple("/terms/", f"Terms of Use | {s['brand']}", "Terms of use for this website.", "Terms of use", "The terms that apply when you use this website.", f'<div class="container"><div class="prose narrow" style="padding:72px 0 104px">{TERMS}</div></div>')); urls.append("/terms/")
     gl = "".join(f'<div class="gt" id="{E(t.split(" (")[0].lower().replace(" ","-"))}"><dt>{E(t)}</dt><dd>{E(d)}</dd></div>' for t,d in sorted(GLOSSARY))
     glsch = {"@context":"https://schema.org","@type":"DefinedTermSet","name":"Health insurance glossary","hasDefinedTerm":[{"@type":"DefinedTerm","name":t,"description":d} for t,d in GLOSSARY]}
@@ -347,20 +399,22 @@ def main():
     hsch = faq_schema([x for _,q in HELP for x in q])
     hnav = "".join(f'<a href="#{E(h.lower().replace(" ","-").replace(",",""))}">{E(h)}</a>' for h,_ in HELP)
     write("/help/", simple("/help/", f"Help Center | {s['brand']}", "Answers about comparing health plans, checking doctors and prescriptions, tax credits and working with a licensed specialist.", "Help center", "Answers to common questions about shopping, costs and coverage.", f'<div class="container"><div class="helpw" style="padding:56px 0 96px"><nav class="hnav">{hnav}<a href="/glossary/">Glossary</a><a href="/contact/">Contact us</a></nav><div>{hp}<div class="helpbox"><h3>Still have a question?</h3><p><a href="tel:{s["phone_href"]}">{CALL()}</a> ({E(s["hours"])}), email <a href="mailto:{s["email"]}">{E(s["email"])}</a>, or ask Mr. Marketplace in the corner.</p></div></div></div></div><script type="application/ld+json">{json.dumps(hsch)}</script>')); urls.append("/help/")
-    lic = "".join(f'<tr><td>{E(a)}</td><td>{E(b)}</td></tr>' for a,b in LICENSES)
+    REAL_LIC = [(a,b) for a,b in LICENSES if not a.startswith("[")]
+    lic = "".join(f'<tr><td>{E(a)}</td><td>{E(b)}</td></tr>' for a,b in REAL_LIC) or '<tr><td colspan="2">State license details available on request.</td></tr>'
     trust = f"""<p>{E(s['brand'])} is built to be transparent about who we are, how we're paid and where our information comes from.</p>
 <h2 id="who">Who operates this site</h2><p>{E(s['brand'])} is run by {E(s['legal_name'])}, a licensed health insurance agent. You can verify any agent's license through your state's department of insurance or the National Insurance Producer Registry at <a href="https://nipr.com/" target="_blank" rel="noopener">nipr.com</a>.</p>
 <table class="lic"><tr><th>State</th><th>License number</th></tr>{lic}</table>
 <h2 id="not-government">We are not the government</h2><p>{E(s['brand'])} is not HealthCare.gov, not a government agency and not an insurance company. You can always shop and enroll on your own at <a href="https://www.healthcare.gov/" target="_blank" rel="noopener">HealthCare.gov</a> or your state's official marketplace.</p>
 <h2 id="data">Where our information comes from</h2><p>Plans, prices, benefits, provider networks and drug lists come from the federal Marketplace data published by the Centers for Medicare &amp; Medicaid Services (the data behind HealthCare.gov), as reported by each insurance company. Networks and drug lists change during the year and can be incomplete, so always confirm with your doctor and the plan before enrolling. Your specialist can verify them for you.</p>
 <h2 id="how-we-are-paid">How we're paid</h2><p>Using {E(s['brand'])} is free. If you enroll through your licensed agent, the insurance company pays the agent a commission. Commissions are built into plan pricing, so your premium for the same plan is the same whether you enroll on your own or through an agent. We show plans from every insurance company available in your area, sorted the way you choose, not by commission. Your agent may not be appointed with every insurance company; if you prefer a plan your agent can't enroll you in, they'll tell you how to enroll in it directly.</p>
-<h2 id="privacy">How we protect your information</h2><ul><li>Every page is encrypted (HTTPS).</li><li>Your request goes to one licensed professional and is never sold or shared with other agents or lead buyers.</li><li>You choose how we contact you and can withdraw permission at any time from your request page.</li><li>Every permission you give is recorded with the exact wording you agreed to, so there's a clear record.</li></ul><p>Read the full <a href="/privacy/">privacy policy</a>.</p>
+<h2 id="privacy">How we protect your information</h2><ul><li>Every page is encrypted (HTTPS).</li><li>Your request goes to one licensed Mr. Marketplace advisor and is never put on a lead list or shared with multiple agents.</li><li>You choose how we contact you and can withdraw permission at any time from your request page.</li><li>Every permission you give is recorded with the exact wording you agreed to, so there's a clear record.</li></ul><p>Read the full <a href="/privacy/">privacy policy</a>.</p>
 <h2 id="standards">Our standards</h2><ul><li>No guaranteed-savings claims. Real prices, shown as reported.</li><li>No pressure. You decide whether and when to enroll.</li><li>Guides are reviewed by a licensed professional and dated.</li><li>We'll tell you if your current plan is already the right one.</li></ul>
 <h2 id="contact">Questions or complaints</h2><p><a href="tel:{s['phone_href']}">{CALL()}</a> or email <a href="mailto:{s['email']}">{E(s['email'])}</a>. You may also contact your state's department of insurance.</p>"""
     write("/trust/", simple("/trust/", f"Licensing & Transparency | {s['brand']}", f"Who operates {s['brand']}, licensing, how we're paid, where our plan data comes from and how we protect your information.", "Licensing & transparency", "Who we are, how we're paid and where our information comes from.", f'<div class="container"><div class="prose narrow" style="padding:56px 0 96px">{trust}</div></div>')); urls.append("/trust/")
     acc = f"""<p>{E(s['brand'])} is committed to making this website usable by everyone, including people with disabilities. We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 Level AA.</p><h2>What we do</h2><ul><li>Text and controls are designed for readable contrast and can be enlarged.</li><li>Forms work with a keyboard and screen readers, with labels and clear error messages.</li><li>Pages respect reduced-motion settings.</li></ul><h2>Need help or found a problem?</h2><p>If anything on this site is hard to use, tap <a href="tel:{s['phone_href']}">{CALL()}</a> and a licensed professional will help you by phone, or email <a href="mailto:{s['email']}">{E(s['email'])}</a> so we can fix it.</p>"""
     write("/accessibility/", simple("/accessibility/", f"Accessibility | {s['brand']}", "Our commitment to an accessible website.", "Accessibility", "Everyone should be able to shop for coverage.", f'<div class="container"><div class="prose narrow" style="padding:56px 0 96px">{acc}</div></div>')); urls.append("/accessibility/")
-    con = f"""<div class="cgrid"><div class="cc"><h3>Call</h3><p><a class="btn btn-navy btn-sm" href="tel:{s['phone_href']}">{CALL()}</a><br><small>{E(s['hours'])}</small></p></div><div class="cc"><h3>Email</h3><p><a href="mailto:{s['email']}">{E(s['email'])}</a><br><small>We reply within one business day.</small></p></div><div class="cc"><h3>Already submitted a request?</h3><p>Use the <b>Track your request</b> link in your confirmation email to message your specialist directly.</p></div><div class="cc"><h3>Mailing address</h3><p>{E(s['address'])}</p></div></div><p style="margin-top:28px">Want to see your options first? <a href="/#quote">Begin your review</a>. It takes about two minutes.</p>"""
+    ADDR_CARD = ('<div class="cc"><h3>Mailing address</h3><p>%s</p></div>' % E(s["address"])) if s["address"] else ""
+    con = f"""<div class="cgrid"><div class="cc"><h3>Call</h3><p><a class="btn btn-navy btn-sm" href="tel:{s['phone_href']}">{CALL()}</a><br><small>{E(s['hours'])}</small></p></div><div class="cc"><h3>Email</h3><p><a href="mailto:{s['email']}">{E(s['email'])}</a><br><small>We reply within one business day.</small></p></div><div class="cc"><h3>Already submitted a request?</h3><p>Use the <b>Track your request</b> link in your confirmation email to message your specialist directly.</p></div>{ADDR_CARD}</div><p style="margin-top:28px">Want to see your options first? <a href="/#quote">Begin your review</a>. It takes about two minutes.</p>"""
     write("/contact/", simple("/contact/", f"Contact Us | {s['brand']}", f"Contact {s['brand']} by phone or email.", "Contact us", "Real people, licensed professionals.", f'<div class="container"><div class="prose narrow" style="padding:56px 0 96px">{con}</div></div>')); urls.append("/contact/")
     # ---------- free calculators (English + Spanish) ----------
     for lg in ("en", "es"):
@@ -394,22 +448,24 @@ def main():
     hp = "".join(f'<h2 id="{slug(h)}">{E(h)}</h2>{faq_html(q)}' for h,q in HELP_ES)
     hnav = "".join(f'<a href="#{slug(h)}">{E(h)}</a>' for h,_ in HELP_ES)
     write("/es/ayuda/", simple("/es/ayuda/", "Centro de ayuda | Mr. Marketplace", "Respuestas sobre cómo comparar planes médicos, revisar médicos y medicamentos, créditos fiscales y trabajar con un especialista con licencia.", "Centro de ayuda", "Respuestas a preguntas comunes sobre compras, costos y cobertura.", f'<div class="container"><div class="helpw" style="padding:56px 0 96px"><nav class="hnav">{hnav}<a href="/es/glosario/">Glosario</a><a href="/es/contacto/">Contáctenos</a></nav><div>{hp}<div class="helpbox"><h3>¿Tiene otra pregunta?</h3><p><a href="tel:{s["phone_href"]}">{CALL()}</a> ({E(SITE_ES["hours"])}), escriba a <a href="mailto:{s["email"]}">{E(s["email"])}</a> o pregunte a Mr. Marketplace en la esquina.</p></div></div></div></div>', extra_schema=[faq_schema([x for _,q in HELP_ES for x in q])])); urls.append("/es/ayuda/")
-    lic_es = "".join(f'<tr><td>{E(a)}</td><td>{E(b)}</td></tr>' for a,b in LICENSES)
+    lic_es = "".join(f'<tr><td>{E(a)}</td><td>{E(b)}</td></tr>' for a,b in REAL_LIC) or '<tr><td colspan="2">Detalles de licencias estatales disponibles a solicitud.</td></tr>'
     trust_es = f"""<p>{E(s['brand'])} es transparente sobre quiénes somos, cómo nos pagan y de dónde proviene nuestra información.</p>
 <h2 id="quien">Quién opera este sitio</h2><p>{E(s['brand'])} es operado por {E(s['legal_name'])}, agente de seguros médicos con licencia. Puede verificar la licencia de cualquier agente en el departamento de seguros de su estado o en el Registro Nacional de Productores de Seguros en <a href="https://nipr.com/" target="_blank" rel="noopener">nipr.com</a>.</p>
 <table class="lic"><tr><th>Estado</th><th>Número de licencia</th></tr>{lic_es}</table>
 <h2 id="no-gobierno">No somos el gobierno</h2><p>{E(s['brand'])} no es CuidadoDeSalud.gov, ni una agencia del gobierno, ni una aseguradora. Siempre puede comparar e inscribirse por su cuenta en <a href="https://www.cuidadodesalud.gov/es/" target="_blank" rel="noopener">CuidadoDeSalud.gov</a> o en el mercado oficial de su estado.</p>
 <h2 id="datos">De dónde proviene nuestra información</h2><p>Los planes, precios, beneficios, redes de proveedores y listas de medicamentos provienen de los datos federales del Mercado publicados por los Centros de Servicios de Medicare y Medicaid (los datos detrás de CuidadoDeSalud.gov), según lo informa cada aseguradora. Las redes y listas cambian durante el año y pueden estar incompletas; confirme siempre con su médico y el plan antes de inscribirse.</p>
 <h2 id="como-nos-pagan">Cómo nos pagan</h2><p>Usar {E(s['brand'])} es gratis. Si se inscribe con su agente con licencia, la aseguradora le paga una comisión al agente. Las comisiones ya están incluidas en el precio de los planes, así que su prima para el mismo plan es igual si se inscribe por su cuenta o con un agente. Mostramos planes de todas las aseguradoras disponibles en su área, ordenados como usted elija, no por comisión. Es posible que su agente no esté autorizado con todas las aseguradoras; si prefiere un plan en el que su agente no puede inscribirle, le dirá cómo inscribirse directamente.</p>
-<h2 id="privacidad">Cómo protegemos su información</h2><ul><li>Todas las páginas están cifradas (HTTPS).</li><li>Su solicitud va a un solo profesional con licencia y nunca se vende ni se comparte con otros agentes.</li><li>Usted elige cómo le contactamos y puede retirar su permiso en cualquier momento.</li><li>Cada permiso queda registrado con el texto exacto que aceptó.</li></ul><p>La <a href="/privacy/" hreflang="en">política de privacidad</a> oficial está en inglés.</p>
+<h2 id="privacidad">Cómo protegemos su información</h2><ul><li>Todas las páginas están cifradas (HTTPS).</li><li>Su solicitud va a un solo asesor con licencia de Mr. Marketplace y nunca va a una lista de contactos ni se comparte con varios agentes.</li><li>Usted elige cómo le contactamos y puede retirar su permiso en cualquier momento.</li><li>Cada permiso queda registrado con el texto exacto que aceptó.</li></ul><p>La <a href="/privacy/" hreflang="en">política de privacidad</a> oficial está en inglés.</p>
 <h2 id="contacto">Preguntas o quejas</h2><p><a href="tel:{s['phone_href']}">{CALL()}</a> o escriba a <a href="mailto:{s['email']}">{E(s['email'])}</a>. También puede comunicarse con el departamento de seguros de su estado.</p>"""
     write("/es/transparencia/", simple("/es/transparencia/", f"Licencias y transparencia | {s['brand']}", f"Quién opera {s['brand']}, licencias, cómo nos pagan, de dónde provienen los datos de los planes y cómo protegemos su información.", "Licencias y transparencia", "Quiénes somos, cómo nos pagan y de dónde proviene nuestra información.", f'<div class="container"><div class="prose narrow" style="padding:56px 0 96px">{trust_es}</div></div>')); urls.append("/es/transparencia/")
-    con_es = f"""<div class="cgrid"><div class="cc"><h3>Llámenos</h3><p><a class="btn btn-navy btn-sm" href="tel:{s['phone_href']}">{CALL()}</a><br><small>{E(SITE_ES['hours'])}</small></p></div><div class="cc"><h3>Correo electrónico</h3><p><a href="mailto:{s['email']}">{E(s['email'])}</a><br><small>Respondemos en un día hábil.</small></p></div><div class="cc"><h3>¿Ya envió una solicitud?</h3><p>Use el enlace <b>Ver el estado de mi solicitud</b> de su correo de confirmación para escribirle directamente a su especialista.</p></div><div class="cc"><h3>Dirección postal</h3><p>{E(s['address'])}</p></div></div><p style="margin-top:28px">¿Quiere ver sus opciones primero? <a href="/es/#quote">Comience su revisión</a>. Toma unos dos minutos.</p>"""
+    ADDR_CARD_ES = ('<div class="cc"><h3>Dirección postal</h3><p>%s</p></div>' % E(s["address"])) if s["address"] else ""
+    con_es = f"""<div class="cgrid"><div class="cc"><h3>Llámenos</h3><p><a class="btn btn-navy btn-sm" href="tel:{s['phone_href']}">{CALL()}</a><br><small>{E(SITE_ES['hours'])}</small></p></div><div class="cc"><h3>Correo electrónico</h3><p><a href="mailto:{s['email']}">{E(s['email'])}</a><br><small>Respondemos en un día hábil.</small></p></div><div class="cc"><h3>¿Ya envió una solicitud?</h3><p>Use el enlace <b>Ver el estado de mi solicitud</b> de su correo de confirmación para escribirle directamente a su especialista.</p></div>{ADDR_CARD_ES}</div><p style="margin-top:28px">¿Quiere ver sus opciones primero? <a href="/es/#quote">Comience su revisión</a>. Toma unos dos minutos.</p>"""
     write("/es/contacto/", simple("/es/contacto/", f"Contáctenos | {s['brand']}", f"Comuníquese con {s['brand']} por teléfono o correo electrónico.", "Contáctenos", "Personas reales, profesionales con licencia.", f'<div class="container"><div class="prose narrow" style="padding:56px 0 96px">{con_es}</div></div>')); urls.append("/es/contacto/")
     write("/es/estado/", simple("/es/estado/", f"Su solicitud | {s['brand']}", "Vea el estado de su solicitud de seguro.", "", "", '<div class="container" style="padding:48px 20px 96px"><div id="portal"></div></div>', noindex=True, scripts=("mm.js","portal.js","mascot.js")))
     LANG["v"] = "en"
     write("/status/", simple("/status/", f"Your Request | {s['brand']}", "Check the status of your insurance request.", "", "", '<div class="container" style="padding:48px 20px 96px"><div id="portal"></div></div>', noindex=True, scripts=("mm.js","portal.js","mascot.js")))
     write("/crm/", simple("/crm/", f"CRM | {s['brand']}", "Agent CRM.", "", "", '<div id="crm"></div>', noindex=True, scripts=("crm.js",), extra_css='<link rel="stylesheet" href="/assets/crm.css">'))
+    write("/agents/", agents_page())
     write("/agent/", '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0;url=/crm/"><a href="/crm/">Open the CRM</a>')
     today = datetime.date.today().isoformat()
     open("dist/sitemap.xml","w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(f"  <url><loc>{s['domain']}{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n")
