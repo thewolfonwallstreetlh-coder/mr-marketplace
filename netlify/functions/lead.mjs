@@ -1,7 +1,7 @@
 // POST /api/lead
 //  stage 1 (no id): create the lead from contact + basics, route it, alert (LEAD_DELIVERY=immediate), confirm by email
 //  stage 2 ({id, token}): add qualification answers + rates, rescore, alert "qualified"
-import { json, db, settings, qualify, route, bumpLoad, publicAgent, alert, confirm, stateFromZip, rid, body, ipOf, limit, tooMany, same, ID_RE, TOKEN_RE, str, oneOf, num, NAMES } from "../lib/common.mjs";
+import { json, db, settings, qualify, route, bumpLoad, publicAgent, alert, confirm, stateFromZip, rid, body, ipOf, limit, tooMany, same, ID_RE, TOKEN_RE, str, oneOf, num, NAMES , loadAdvisors } from "../lib/common.mjs";
 
 // Only known answer fields are kept, each with a type and length limit. Anything else is dropped.
 const ANSWERS = { start: ["asap", "next", "later", "research"], work: ["self", "owner", "w2", "between", "other"], tobacco: ["yes", "no"], budget: ["500", "1000", "2000", "9999", "unsure"] };
@@ -86,7 +86,8 @@ export default async (req, context) => {
   L.qualification = qualify(L, cfg, extra);
   const cat = L.qualification.category; // preliminary until stage 2
   if (cat !== "D") {
-    const a = (orig?.agent && cfg.agents.find((x) => x.id === orig.agent.id)) || await route(L, cfg, store);
+    await loadAdvisors(cfg, store);
+    const a = (orig?.agent && cfg.agents.find((x) => x.id === orig.agent.id && x.active !== false)) || await route(L, cfg, store);
     if (a) { L.agent = { id: a.id, name: a.name, phone: a.phone, email: a.email || "", webhook: a.webhook || "", title: a.title || "" }; L.status = "assigned"; L.events.push({ t: now, type: "assigned", agent: a.id }); await bumpLoad(store, a.id, 1); }
   } else { L.status = "lost"; L.lost_reason = "Not eligible"; }
   L.tasks.push({ id: rid(4), title: `First contact: ${L.contact.preferred === "text" ? "text" : L.contact.preferred === "email" ? "email" : "call"} ${L.contact.first}`, due: new Date(Date.now() + 5 * 60000).toISOString(), done: false, auto: true });

@@ -3,7 +3,7 @@
 // GET  /api/agent/me      -> signed-in user, statuses, agents
 // GET  /api/agent/leads   -> leads (admin: all, agent: own)
 // POST /api/agent/leads   -> {create:{...}} add a lead by hand, or {id, ...actions} update one
-import { json, db, settings, who, STATUSES, OPEN, bumpLoad, alert, rid, stateFromZip, qualify, body, ipOf, limit, tooMany, checkPassword, issue, ipAllowed, users, ID_RE, str, oneOf, num, NAMES, MIN_PW, SESSION_HOURS } from "../lib/common.mjs";
+import { json, db, settings, who, STATUSES, OPEN, bumpLoad, alert, rid, stateFromZip, qualify, body, ipOf, limit, tooMany, checkPassword, issue, ipAllowed, users, ID_RE, str, oneOf, num, NAMES, MIN_PW, SESSION_HOURS, loadAdvisors, listAdvisors, verifyPw } from "../lib/common.mjs";
 
 const s = (v, n = 300) => str(v, n);
 const PREF = ["call", "text", "email"], CATS = ["A", "B", "C", "D"];
@@ -11,6 +11,7 @@ const PREF = ["call", "text", "email"], CATS = ["A", "B", "C", "D"];
 export default async (req, context) => {
   const cfg = settings(), store = db(), ip = ipOf(req, context), u = new URL(req.url), now = new Date().toISOString();
   if (!ipAllowed(ip)) return json({ ok: false, error: "unauthorized" }, 401);
+  await loadAdvisors(cfg, store);
 
   if (u.pathname.endsWith("/login")) {
     if (req.method !== "POST") return json({ ok: false }, 405);
@@ -19,7 +20,12 @@ export default async (req, context) => {
     const rec = (await store.get(`rl/login/${fails}`, { type: "json" })) || { n: 0, t: 0 };
     if (rec.n >= 5 && Date.now() - rec.t < 15 * 60000) return tooMany();
     const b = await body(req, 2048);
-    const user = b && typeof b.password === "string" ? checkPassword(cfg, b.password) : null;
+    const email = b && typeof b.email === "string" ? b.email.trim().slice(0, 120) : "";
+    const user = b && typeof b.password === "string" ? checkPassword(cfg, b.password, email) : null;
+    if (!user && email && typeof b?.password === "string") {   // right password but access paused (unpaid, paused or canceled)?
+      const adv = (await listAdvisors(store)).find((a) => (a.email || "").toLowerCase() === email.toLowerCase());
+      if (adv && adv.pwh && verifyPw(b.password, adv.pwh)) return json({ ok: false, error: "inactive", status: adv.status }, 403);
+    }
     if (!user) {
       await store.setJSON(`rl/login/${fails}`, { n: Date.now() - rec.t < 15 * 60000 ? rec.n + 1 : 1, t: Date.now() });
       await new Promise((r) => setTimeout(r, 400 + Math.random() * 400)); // slow down guessing
@@ -33,7 +39,7 @@ export default async (req, context) => {
   const me = who(req, cfg);
   if (!me) return json({ ok: false, error: "unauthorized" }, 401);
   if (!(await limit(store, "crm", me.id, 600, 600))) return tooMany();
-  if (u.pathname.endsWith("/me")) return json({ ok: true, me, statuses: STATUSES, agents: cfg.agents.map((a) => ({ id: a.id, name: a.name })) });
+  if (u.pathname.endsWith("/me")) return json({ ok: true, me, statuses: STATUSES, agents: cfg.agents.filter((a) => a.active !== false).map((a) => ({ id: a.id, name: a.name, advisor: !!a.advisor })) });
 
   if (req.method === "GET") {
     const { blobs } = await store.list({ prefix: "lead/" });
