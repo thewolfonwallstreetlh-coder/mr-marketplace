@@ -161,3 +161,13 @@ html,body{background:#f1f4f8}
   .bars div{grid-template-columns:120px 1fr 30px}
   .tbl .hm{display:none}
 }
+/* advisors */
+.advk{grid-template-columns:repeat(5,1fr)}
+.advset{padding:16px 20px;margin-bottom:16px;border-color:#f0d9a8;background:#fffaf0}
+.advset h3{font-size:15px;color:var(--navy);margin-bottom:4px}.advset p{font-size:13.5px;color:var(--body)}
+.advset ul{margin:8px 0 0 18px;font-size:13.5px;line-height:1.7}
+.advt tr:hover td{background:#fff;cursor:default}
+.advt td small{color:var(--mute);font-size:12.5px}
+.advacts{text-align:right;white-space:normal}.advacts .mini-btn{margin:2px 0 2px 4px}
+.advnote{font-size:13px;color:var(--mute);margin-top:14px;max-width:760px}
+@media (max-width:900px){.advk{grid-template-columns:repeat(2,1fr)}.advacts{text-align:left}}

@@ -5,7 +5,8 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const IC={today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
  pipe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="4.5" height="16" rx="1.5"/><rect x="9.75" y="4" width="4.5" height="11" rx="1.5"/><rect x="16" y="4" width="4.5" height="7" rx="1.5"/></svg>',
  leads:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5 6-5s5.2 1.7 6 5M16 5.5a3 3 0 010 5.8M18 14.6c1.6.6 2.7 2.2 3.1 4.9"/></svg>',
- rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>'};
+ rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>',
+ adv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>'};
 const STL={received:"New",assigned:"Assigned",contacted:"Contacted",quoting:"Quoting",application:"Application",enrolled:"Enrolled",lost:"Lost"};
 const PROD={health:"Individual & family",business:"Business",dental:"Dental & vision",supplemental:"Supplemental"};
 const START={asap:"As soon as possible",next:"Next month",later:"In 2–3 months",research:"Just researching"};
@@ -29,22 +30,110 @@ const ph=l=>(l.contact.phone||"").replace(/\D/g,"");
 const fp=p=>{const d=String(p||"").replace(/\D/g,"").slice(-10);return d.length===10?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:p||""};
 const can=(l,c)=>l.consents?.[c]?.given&&!l.consents?.[c]?.withdrawn;
 
+
+/* ---------- Advisors (owner only): the $500/week program ---------- */
+const AST={applied:["New application","aw"],approved:["Approved · awaiting payment",""],active:["Active","ok"],past_due:["Payment failed","od"],paused:["Paused",""],canceled:["Canceled",""],rejected:["Declined",""]};
+let ADV=null;
+async function vAdv(m){
+  m.innerHTML=`<div class="advw"><div class="ph"><div><h1>Advisors</h1><p>Agents paying $500/week for CRM access and exclusive leads in their licensed states.</p></div><a class="btns" href="/agents/" target="_blank" rel="noopener" style="text-decoration:none">View join page ↗</a></div><div class="advb"><div class="empty">Loading…</div></div></div>`;
+  const r=await api("/api/advisor/admin");if(!r.ok){m.querySelector(".advb").innerHTML='<div class="empty">Couldn\'t load advisors.</div>';return}
+  ADV=r;drawAdv(m);
+}
+function drawAdv(m){
+  const b=m.querySelector(".advb");if(!b)return;const S=ADV.setup,list=ADV.advisors;
+  const miss=[!S.payment_link&&"<b>STRIPE_PAYMENT_LINK</b>: your $500/week Stripe Payment Link",!S.webhook&&"<b>STRIPE_WEBHOOK_SECRET</b>: so payments switch access on and off automatically",!S.alerts&&"<b>RESEND_API_KEY</b> and <b>ALERT_EMAIL</b>: so you're emailed about new applications"].filter(Boolean);
+  const live=list.filter(a=>a.live),wk=live.length*500;
+  const states={};live.forEach(a=>a.states.forEach(s=>(states[s]=(states[s]||0)+1)));
+  const btn=(a,act,t,cls)=>`<button class="mini-btn ${cls||""}" data-adv="${esc(a.id)}" data-act="${act}">${t}</button>`;
+  const acts=a=>{const x=[];
+    if(a.status==="applied"){x.push(btn(a,"approve","Approve","navy"),btn(a,"reject","Decline"))}
+    if(a.status==="approved"){x.push(btn(a,"welcome","Copy welcome message","navy"),btn(a,"activate","Mark paid (7 days)"))}
+    if(a.status==="active"){if(!a.has_password)x.push(btn(a,"welcome","Copy welcome message","navy"));x.push(btn(a,"states","Edit states"),btn(a,"activate","Add 7 days"),btn(a,"pause","Pause"))}
+    if(a.status==="past_due"){x.push(btn(a,"paylink","Copy payment link","navy"),btn(a,"pause","Pause"))}
+    if(["paused","canceled"].includes(a.status)){x.push(btn(a,"resume","Resume","navy"),btn(a,"delete","Remove"))}
+    if(a.status==="rejected"){x.push(btn(a,"approve","Approve"),btn(a,"delete","Remove"))}
+    if(!a.npn_verified&&!["rejected","canceled"].includes(a.status))x.push(btn(a,"npn_verified","License checked"));
+    return x.join(" ")};
+  b.innerHTML=`${miss.length?`<div class="card advset"><h3>Finish setting up payments</h3><p>Add these in Netlify → Keys and secrets, then redeploy:</p><ul>${miss.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}
+   <div class="kp advk"><div class="k"><span>Active advisors</span><b>${live.length}</b></div><div class="k"><span>Weekly revenue</span><b>$${wk.toLocaleString()}</b></div><div class="k"><span>New applications</span><b>${list.filter(a=>a.status==="applied").length}</b></div><div class="k"><span>Payment problems</span><b>${list.filter(a=>a.status==="past_due").length}</b></div><div class="k"><span>States covered</span><b>${Object.keys(states).length}</b></div></div>
+   <div class="card"><div class="tblwrap"><table class="tbl advt"><thead><tr><th>Advisor</th><th>Status</th><th>States</th><th class="hm">NPN</th><th class="hm">Leads (7 days)</th><th class="hm">Paid through</th><th></th></tr></thead><tbody>
+   ${list.map(a=>`<tr><td><b>${esc(a.name)}</b><br><small>${esc(a.email)} · ${esc(a.phone)}${a.languages?.includes("Spanish")?' · <span class="pill">Español</span>':""}</small></td>
+     <td><span class="pill ${AST[a.status]?.[1]||""}">${esc(AST[a.status]?.[0]||a.status)}</span>${a.status==="active"&&!a.has_password?'<br><small>No password yet</small>':""}</td>
+     <td>${esc((a.states||[]).join(", "))}</td>
+     <td class="hm">${esc(a.npn)}${a.npn_verified?' <span class="pill ok">checked</span>':""}${a.ffm_registered?'<br><small>FFM registered</small>':'<br><small style="color:var(--bad)">Not FFM registered</small>'}</td>
+     <td class="hm">${a.leads_7d}</td><td class="hm">${a.paid_through?esc(new Date(a.paid_through).toLocaleDateString(undefined,{month:"short",day:"numeric"})):"—"}</td>
+     <td class="advacts">${acts(a)}</td></tr>`).join("")||'<tr><td colspan="7" class="empty">No applications yet. Share your join page with agents: <b>'+esc(location.origin)+'/agents/</b></td></tr>'}
+   </tbody></table></div></div>
+   <p class="advnote">Before approving, look up each agent's NPN on NIPR or their state insurance department to confirm the license is active in every state they listed. Leads go only to active, paid advisors licensed in the lead's state. If no advisor covers a state, the lead comes to you.</p>`;
+  b.querySelectorAll("[data-act]").forEach(x=>x.onclick=()=>advAct(m,x.dataset.adv,x.dataset.act));
+}
+async function copy(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand("copy")}catch(x){}a.remove();return ok}}
+function welcome(a,invite){
+  return `Hi ${a.first},
+
+Welcome to Mr. Marketplace! You've been approved as a Mr. Marketplace advisor for ${a.states.join(", ")}.
+
+1) Start your $500/week membership:
+${a.pay_link||"(payment link coming separately)"}
+
+2) Create your CRM password (link expires in 14 days):
+${invite}
+
+3) Sign in any time at ${location.origin}/crm/ with ${a.email}
+
+Once your payment goes through, new leads in your licensed states come straight to your CRM and email. Each lead goes to one advisor only, so please reach out quickly and only in the ways each person agreed to.
+
+Joseph Frazier
+President, Mr. Marketplace`}
+async function advAct(m,id,act){
+  const a=ADV.advisors.find(x=>x.id===id);if(!a)return;
+  const send=async body=>{const r=await api("/api/advisor/admin",{id,...body});if(!r.ok){toast(r.error==="states"?"Enter at least one valid state.":"Couldn't save that change.");return null}
+    if(r.deleted)ADV.advisors=ADV.advisors.filter(x=>x.id!==id);else{const i=ADV.advisors.findIndex(x=>x.id===id);ADV.advisors[i]={...ADV.advisors[i],...r.advisor}}drawAdv(m);return r};
+  if(act==="paylink"){if(!a.pay_link)return toast("Add STRIPE_PAYMENT_LINK in Netlify first.");return toast(await copy(a.pay_link)?"Payment link copied. Send it to "+a.first+".":"Couldn't copy.")}
+  if(act==="welcome"||act==="approve"){const r=await send({action:act==="approve"?"approve":"invite"});if(!r)return;
+    const link=r.invite_link;if(!link){toast("Approved.");return}
+    const text=welcome({...a,...r.advisor},link);const ok=await copy(text);
+    modal(`<h3>Send this to ${esc(a.first)}</h3><p style="font-size:13.5px;color:var(--mute);margin:-4px 0 12px">${ok?"Copied to your clipboard. ":""}Paste it into an email to ${esc(a.email)}. The setup link works once and expires in 14 days.</p><textarea readonly style="width:100%;height:280px;font:13px/1.5 var(--font);border:1px solid var(--line);border-radius:10px;padding:12px">${esc(text)}</textarea>`,()=>true,"Done");return}
+  if(act==="states"){modal(`<h3>States for ${esc(a.name)}</h3><div class="frm"><div class="full"><label>Licensed states (2-letter codes, comma separated)<input name="s" value="${esc(a.states.join(", "))}"></label></div></div>`,async bg=>{const st=bg.querySelector('[name="s"]').value.toUpperCase().split(/[^A-Z]+/).filter(Boolean);return !!(await send({action:"states",states:st}))});return}
+  if(act==="delete"){modal(`<h3>Remove ${esc(a.name)}?</h3><p style="font-size:14px;color:var(--body)">This deletes their advisor record and sign-in. Leads already assigned to them stay in your CRM. This can't be undone.</p>`,async()=>!!(await send({action:"delete"})),"Remove");return}
+  if(act==="reject"){modal(`<h3>Decline ${esc(a.name)}?</h3><p style="font-size:14px;color:var(--body)">They won't be notified automatically.</p>`,async()=>!!(await send({action:"reject"})),"Decline");return}
+  if(act==="pause"){modal(`<h3>Pause ${esc(a.name)}?</h3><p style="font-size:14px;color:var(--body)">They'll be signed out and stop receiving leads right away. Their Stripe subscription isn't canceled, so cancel it in Stripe too if they're leaving.</p>`,async()=>!!(await send({action:"pause"})),"Pause");return}
+  const r=await send({action:act,days:7});if(r)toast(act==="activate"?`${a.first} is active for 7 more days.`:act==="npn_verified"?"Marked as license checked.":"Saved.");
+}
+
 /* ---------- auth ---------- */
-function login(msg){
-  root.innerHTML=`<div class="login"><img src="/assets/brand/logo-compact-dark.png" alt="Mr. Marketplace"><h1>Mr. Marketplace CRM</h1><p>Sign in with your password.</p>
-   <form><input type="password" name="p" placeholder="Password" autocomplete="current-password" autofocus><p class="e">${esc(msg||"")}</p><button>Sign in</button></form></div>`;
+function login(msg,email){
+  root.innerHTML=`<div class="login"><img src="/assets/brand/logo-compact-dark.png" alt="Mr. Marketplace"><h1>Mr. Marketplace CRM</h1><p>Sign in to see your leads.</p>
+   <form><input type="email" name="u" placeholder="Email (advisors)" autocomplete="username" value="${esc(email||"")}"><input type="password" name="p" placeholder="Password" autocomplete="current-password"><p class="e">${esc(msg||"")}</p><button>Sign in</button></form></div>`;
+  root.querySelector(email?'[name="p"]':'[name="u"]').focus();
   root.querySelector("form").onsubmit=async e=>{e.preventDefault();const btn=e.target.querySelector("button");btn.disabled=true;btn.textContent="Signing in…";
-    const r=await fetch("/api/agent/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:e.target.p.value})}).then(async x=>({status:x.status,...(await x.json().catch(()=>({})))})).catch(()=>({status:0}));
+    const em=e.target.u.value.trim();
+    const r=await fetch("/api/agent/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({password:e.target.p.value,...(em?{email:em}:{})})}).then(async x=>{const j=await x.json().catch(()=>({}));return{...j,adv:j.status,status:x.status}}).catch(()=>({status:0}));
     e.target.p.value="";
     if(r.ok&&r.token){pw=r.token;try{sessionStorage.setItem("mm_tok",pw)}catch(x){}const m=await api("/api/agent/me");if(m.ok){me=m;return boot()}}
-    login(r.status===429?"Too many attempts. Try again in 15 minutes.":r.status===401?"Incorrect password.":r.status===503?(r.detail||"Sign-in isn't set up yet."):"Can't reach the server. Is the site deployed on Netlify?")};
+    const INACTIVE={approved:"You're approved. Your access starts as soon as your first weekly payment goes through.",past_due:"Your weekly payment didn't go through, so your access is paused. Update your payment to continue receiving leads.",paused:"Your access is paused. Please contact Mr. Marketplace.",canceled:"Your membership has ended. Contact Mr. Marketplace to restart it."};
+    login(r.status===403&&r.error==="inactive"?(INACTIVE[r.adv]||"Your access isn't active right now."):r.status===429?"Too many attempts. Try again in 15 minutes.":r.status===401?(em?"Incorrect email or password.":"Incorrect password."):r.status===503?(r.detail||"Sign-in isn't set up yet."):"Can't reach the server. Is the site deployed on Netlify?",em)};
+}
+/* advisor creates a password from their invite link (#setup=...) */
+async function setup(token){
+  const c=await fetch("/api/advisor/setup",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({token,check:true})}).then(r=>r.json()).catch(()=>({}));
+  if(!c.ok){history.replaceState(null,"","/crm/");return login("That setup link has expired or was already used. Ask Mr. Marketplace for a new one.")}
+  root.innerHTML=`<div class="login"><img src="/assets/brand/logo-compact-dark.png" alt="Mr. Marketplace"><h1>Welcome, ${esc(c.name)}</h1><p>Create the password you'll use to sign in as <b>${esc(c.email)}</b>.</p>
+   <form><input type="password" name="p" placeholder="New password (12+ characters)" autocomplete="new-password" minlength="12" required><input type="password" name="c" placeholder="Type it again" autocomplete="new-password" required><p class="e"></p><button>Create password</button></form></div>`;
+  const f=root.querySelector("form"),er=f.querySelector(".e");f.p.focus();
+  f.onsubmit=async e=>{e.preventDefault();if(f.p.value.length<12){er.textContent="Use at least 12 characters.";return}if(f.p.value!==f.c.value){er.textContent="The two passwords don't match.";return}
+    const b=f.querySelector("button");b.disabled=true;b.textContent="Saving…";
+    const r=await fetch("/api/advisor/setup",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({token,password:f.p.value})}).then(r=>r.json()).catch(()=>({}));
+    f.p.value=f.c.value="";history.replaceState(null,"","/crm/");
+    if(!r.ok){er.textContent=r.error==="weak_password"?"Use at least 12 characters.":"Couldn't save. The link may have expired.";b.disabled=false;b.textContent="Create password";return}
+    login(r.active?"Password created. Sign in below.":"Password created. You can sign in as soon as your first weekly payment goes through.",r.email)};
 }
 async function boot(){
   if(!me){const r=await api("/api/agent/me");if(!r.ok){try{sessionStorage.removeItem("mm_tok")}catch(e){}pw="";return login("")}me=r}
   root.innerHTML=`<div class="crm"><aside class="side"><img class="lg" src="/assets/brand/logo-compact-white.png" alt="Mr. Marketplace"><span class="live"><i></i>Live · updates every 20s</span>
-    <nav>${[["today","Today"],["pipe","Pipeline"],["leads","Leads"],["rep","Reports"]].map(([k,t])=>`<button data-v="${k}">${IC[k]}<span>${t}</span>${k==="today"?'<span class="ct" hidden></span>':""}</button>`).join("")}</nav>
+    <nav>${[["today","Today"],["pipe","Pipeline"],["leads","Leads"],["rep","Reports"],...(me.me.role==="admin"?[["adv","Advisors"]]:[])].map(([k,t])=>`<button data-v="${k}">${IC[k]}<span>${t}</span>${k==="today"?'<span class="ct" hidden></span>':""}</button>`).join("")}</nav>
     <button class="add">+ Add lead</button>
-    <div class="foot"><b>${esc(me.me.name)}</b>${me.me.role==="admin"?"Admin · all leads":"Agent · your leads"}<br><button data-a="notify">Enable alerts</button><button data-a="out">Sign out</button></div></aside>
+    <div class="foot"><b>${esc(me.me.name)}</b>${me.me.role==="admin"?"Admin · all leads":me.me.advisor?"Advisor · your leads":"Agent · your leads"}<br><button data-a="notify">Enable alerts</button><button data-a="out">Sign out</button></div></aside>
     <main class="main"></main></div>`;
   root.querySelectorAll(".side nav button").forEach(b=>b.onclick=()=>go(b.dataset.v));
   root.querySelector(".add").onclick=addLead;
@@ -68,7 +157,7 @@ async function load(first){
   document.title=(n?`(${n}) `:"")+"CRM | Mr. Marketplace";
   if(!document.querySelector(".md-bg"))draw();if(open&&byId(open))drawerBody();
 }
-function draw(){const m=root.querySelector(".main");if(!m)return;({today:vToday,pipe:vPipe,leads:vLeads,rep:vRep}[view]||vToday)(m)}
+function draw(){const m=root.querySelector(".main");if(!m)return;if(view==="adv"&&me.me.role!=="admin")view="today";if(view==="adv"){if(!m.querySelector(".advw"))vAdv(m);return}({today:vToday,pipe:vPipe,leads:vLeads,rep:vRep}[view]||vToday)(m)}
 
 /* ---------- TODAY ---------- */
 function vToday(m){
@@ -249,8 +338,8 @@ function drawerBody(){
 async function upd(id,body){const r=await api("/api/agent/leads",{id,...body});if(r.ok){const i=leads.findIndex(x=>x.id===id);if(i>-1)leads[i]=r.lead;draw();if(open===id)drawerBody()}else toast("Couldn't save. Check your connection.");return r}
 
 /* ---------- modals ---------- */
-function modal(html,onSave){const bg=document.createElement("div");bg.className="md-bg";bg.innerHTML=`<div class="md">${html}<div class="act"><button class="btns" data-x>Cancel</button><button class="btnp" data-ok>Save</button></div></div>`;
-  document.body.appendChild(bg);const close=()=>bg.remove();bg.querySelector("[data-x]").onclick=close;bg.onclick=e=>{if(e.target===bg)close()};
+function modal(html,onSave,okText){const bg=document.createElement("div");bg.className="md-bg";bg.innerHTML=`<div class="md">${html}<div class="act">${okText==="Done"?"":'<button class="btns" data-x>Cancel</button>'}<button class="btnp" data-ok>${okText||"Save"}</button></div></div>`;
+  document.body.appendChild(bg);const close=()=>bg.remove();const cx=bg.querySelector("[data-x]");if(cx)cx.onclick=close;bg.onclick=e=>{if(e.target===bg)close()};
   bg.querySelector("[data-ok]").onclick=async()=>{const ok=await onSave(bg);if(ok!==false)close()};const f=bg.querySelector("input,select,textarea");f&&f.focus();return bg}
 function callModal(l){modal(`<h3>Log a call with ${esc(l.contact.first)}</h3><div class="frm"><div class="full"><label>Outcome<select name="o">${OUT.map(o=>`<option>${o}</option>`).join("")}</select></label></div>
   <div><label>Direction<select name="dir"><option value="out">Outbound</option><option value="in">Inbound</option></select></label></div><div><label>Move to stage<select name="st"><option value="">Keep ${STL[l.status]}</option>${["contacted","quoting","application"].map(s=>`<option value="${s}">${STL[s]}</option>`).join("")}</select></label></div>
@@ -289,5 +378,6 @@ function csv(){
 }
 function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),5000)}
 function beep(){try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.08,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.5);o.start();o.stop(c.currentTime+.5)}catch(e){}}
-pw?boot():login();
+const SETUP=(location.hash.match(/^#setup=([a-f0-9]{32})$/)||[])[1];
+SETUP?setup(SETUP):pw?boot():login();
 })();

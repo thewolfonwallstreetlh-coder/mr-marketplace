@@ -93,7 +93,7 @@ const STEP={
    <div class="row"><div class="f"><label for="q_ph">Mobile phone</label><input id="q_ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" value="${esc(S.phone)}"></div><div class="f"><label for="q_em">Email</label><input id="q_em" type="email" autocomplete="email" value="${esc(S.email)}"></div></div>
    <div class="f"><span class="lb">How would you like to hear from us?</span>${pills("pref",[["call","Call me"],["text","Text me"],["email","Email me"]])}</div>
    <input id="q_hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-   <p class="consent-line" id="t_consent">By tapping Continue, you agree that ${esc(D.brand)} and ${esc(D.operator)}, a licensed insurance agent, may contact you about your request by call, text or email at the number and email above, including by automated means. Consent isn't required to buy. Msg &amp; data rates may apply; reply STOP to opt out. <a href="${ES?"/privacy/":"/privacy/"}" target="_blank" rel="noopener">Privacy</a></p>
+   <p class="consent-line" id="t_consent">By tapping Continue, you agree that ${esc(D.brand)}, including ${esc(D.operator)} and the licensed Mr. Marketplace advisor assigned to your request, may contact you about your request by call, text or email at the number and email above, including by automated means. Consent isn't required to buy. Msg &amp; data rates may apply; reply STOP to opt out. <a href="${ES?"/privacy/":"/privacy/"}" target="_blank" rel="noopener">Privacy</a></p>
 `,
   bind:()=>{bindPills();phoneInput("q_ph")},
   read:()=>{Object.assign(S,{first:val("q_fn"),last:val("q_ln"),phone:val("q_ph"),email:val("q_em"),hp:val("q_hp"),cCall:true,cText:true,cMail:true});
@@ -146,7 +146,7 @@ function render(){
    <div class="qc-body"><h2>${st.title}</h2>${st.sub?`<p class="sub">${st.sub}</p>`:""}<form novalidate>${st.html()}
    <div class="q-nav">${step&&!(st.stage2&&flow[step-1]==="contact")?'<button type="button" class="q-back">&larr; Back</button>':""}<button type="submit" class="q-go">${btnTxt} ${ARW}</button></div>
    <p class="q-err" role="alert"></p></form></div>
-   <div class="qc-foot">${LOCK}<span>Secure and encrypted. Your information is never sold.</span></div>`;
+   <div class="qc-foot">${LOCK}<span>Secure and encrypted. Never put on a lead list.</span></div>`;
   {const cl=root.querySelector(".consent-line");if(cl)root.querySelector(".q-nav").after(cl)}
   st.bind&&st.bind();
   root.querySelector("form").onsubmit=e=>{e.preventDefault();next()};
@@ -240,6 +240,7 @@ function payload(R,Q,stage){
    rates:R?{status:R.ok?"shown":(R.reason||"n/a"),count:R.ok?R.plans.length:0,carriers:R.ok?(R.carriers||[]).length:0,lowest:Q.lowest_premium,year:R.year||null}:{},
    tracking:{utm_source:p.get("utm_source")||"",utm_medium:p.get("utm_medium")||"",utm_campaign:p.get("utm_campaign")||"",gclid:p.get("gclid")||"",referrer:document.referrer,seconds:Math.round((Date.now()-t0)/1000)}};
 }
+
 async function sendLead(R,Q,stage){
   const body=payload(R,Q,stage);
   if(stage===2&&LEAD&&LEAD.id){body.id=LEAD.id;body.token=LEAD.token}
