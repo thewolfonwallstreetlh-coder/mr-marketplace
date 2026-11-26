@@ -158,7 +158,7 @@ def foot(scripts=("mm.js","mascot.js")):
   {cols}
  </div>
  <div class="legal">{legal_html()}</div>
- <div class="bot"><span>&copy; {y} {E(s['brand'])}<a class="agent-in" href="/crm/" rel="nofollow">{L("Agent sign-in","Acceso para agentes")}</a><a class="agent-in" href="/agents/" rel="nofollow">{L("Become an advisor","Hágase asesor")}</a></span>{bot}</div>
+ <div class="bot"><span>&copy; {y} {E(s['brand'])}<a class="agent-in" href="/crm/" rel="nofollow">{L("Agent sign-in","Acceso para agentes")}</a></span>{bot}</div>
 </div></footer>
 {sc}
 </body></html>"""
@@ -253,7 +253,7 @@ def home(path="/", noindex=False):
  <div class="up"><span class="kick">{C['demo_kick']}</span><h2 class="h2">{C['demo_h']}</h2><p class="demo-p">{C['demo_p']}</p>
   <ol class="demo-steps">{steps_html}</ol>
   <a class="btn btn-navy" href="#quote" data-quote>{C['cta']} {I['arrow']}</a></div>
- <div class="demo up" aria-hidden="true"><div class="dbar"><i></i><i></i><i></i><span>mr-marketplace.netlify.app</span></div>
+ <div class="demo up" aria-hidden="true"><div class="dbar"><i></i><i></i><i></i><span>mrmarketplace.co</span></div>
   <div class="dbody"><div class="dhead"><b>52 {L("plans","planes")}</b><span class="dsort">{C["demo_lbl"][4]}</span></div>
    {rows_html}
   </div></div>
@@ -341,7 +341,7 @@ def agents_page():
     body = f"""<section class="agt-hero"><div class="container agt-hgrid">
  <div><span class="agt-eye">For licensed health insurance agents</span><h1>Become a Mr.&nbsp;Marketplace Advisor</h1>
  <p class="lead">Exclusive, consumer-requested health insurance leads in your licensed states, delivered to your own CRM the moment they come in.</p>
- <a class="btn btn-white" href="#apply">Apply now</a></div>
+ <div class="agt-ctas"><a class="btn btn-white" href="#apply">Apply now</a><a class="btn agt-signin" href="/crm/">Already an advisor? Sign in</a></div></div>
  <div class="agt-price"><span class="agt-k">Advisor membership</span><div class="agt-amt"><b>$500</b><span>/ week</span></div><ul>{inc_html}</ul><a class="btn btn-navy" href="#apply">Apply now</a><small>Billed weekly through Stripe. Cancel anytime.</small></div>
 </div></section>
 <section class="agt-sec"><div class="container"><h2>How it works</h2><ol class="agt-steps">{steps_html}</ol></div></section>
@@ -357,7 +357,7 @@ def agents_page():
  <li><b>Compliance.</b> Calls, texts and emails must follow each person's recorded consent and all federal and state rules. Misuse ends your membership without refund.</li>
  <li><b>Payment issues.</b> If a weekly payment fails, lead delivery and CRM access pause until it's resolved.</li>
 </ul></div></section>
-<section class="agt-sec agt-alt" id="apply"><div class="container agt-formwrap"><h2>Apply to become an advisor</h2><p>We review every application, usually within one business day.</p>
+<section class="agt-sec agt-alt" id="apply"><div class="container agt-formwrap"><h2>Apply to become an advisor</h2><p>We review every application, usually within one business day. Already have an account? <a href="/crm/">Sign in</a>.</p>
 <form class="agt-form" id="agt-form" novalidate>
  <div class="agt-g2"><label>First name<input name="first" autocomplete="given-name" required></label><label>Last name<input name="last" autocomplete="family-name" required></label></div>
  <div class="agt-g2"><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Mobile phone<input name="phone" type="tel" autocomplete="tel" required></label></div>
