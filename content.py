@@ -9,7 +9,7 @@ SITE = {
     "operator": "Joseph Frazier",
     "phone": "(727) 339-2891",              # dialed by every "Call Mr. Marketplace" button; never shown on the site
     "phone_href": "+17273392891",
-    "email": "president@mrmarketplace.co",
+    "email": "info@mrmarketplace.co",
     "address": "",   # mailing address shown in the footer and contact page; leave empty to hide
     "hours": "Monday to Friday, 8am to 8pm ET · Saturday, 9am to 2pm ET",
     "advisor": "Joseph Frazier",                       # the licensed agent named on guide pages
