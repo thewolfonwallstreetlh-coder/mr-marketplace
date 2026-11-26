@@ -171,3 +171,5 @@ html,body{background:#f1f4f8}
 .advacts{text-align:right;white-space:normal}.advacts .mini-btn{margin:2px 0 2px 4px}
 .advnote{font-size:13px;color:var(--mute);margin-top:14px;max-width:760px}
 @media (max-width:900px){.advk{grid-template-columns:repeat(2,1fr)}.advacts{text-align:left}}
+.login .lg-join{margin:18px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:14px;text-align:center;color:var(--mute)}
+.login .lg-join a{color:var(--blue);font-weight:600}

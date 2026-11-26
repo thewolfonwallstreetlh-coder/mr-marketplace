@@ -104,7 +104,7 @@ async function advAct(m,id,act){
 /* ---------- auth ---------- */
 function login(msg,email){
   root.innerHTML=`<div class="login"><img src="/assets/brand/logo-compact-dark.png" alt="Mr. Marketplace"><h1>Mr. Marketplace CRM</h1><p>Sign in to see your leads.</p>
-   <form><input type="email" name="u" placeholder="Email (advisors)" autocomplete="username" value="${esc(email||"")}"><input type="password" name="p" placeholder="Password" autocomplete="current-password"><p class="e">${esc(msg||"")}</p><button>Sign in</button></form></div>`;
+   <form><input type="email" name="u" placeholder="Email (advisors)" autocomplete="username" value="${esc(email||"")}"><input type="password" name="p" placeholder="Password" autocomplete="current-password"><p class="e">${esc(msg||"")}</p><button>Sign in</button></form><p class="lg-join">Not an advisor yet? <a href="/agents/">Apply to join</a></p></div>`;
   root.querySelector(email?'[name="p"]':'[name="u"]').focus();
   root.querySelector("form").onsubmit=async e=>{e.preventDefault();const btn=e.target.querySelector("button");btn.disabled=true;btn.textContent="Signing in…";
     const em=e.target.u.value.trim();

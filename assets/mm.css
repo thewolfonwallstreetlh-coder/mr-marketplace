@@ -832,3 +832,5 @@ p{margin:0}
 .agent-in+.agent-in{margin-left:14px}
 @media (max-width:960px){.agt-hgrid,.agt-two{grid-template-columns:1fr;gap:36px}.agt-steps{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.agt-steps,.agt-g2{grid-template-columns:1fr}.agt-hero{padding:48px 0 56px}.agt-form{padding:20px}}
+.agt-ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.agt-signin{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}.agt-signin:hover{background:rgba(255,255,255,.08);color:#fff}
